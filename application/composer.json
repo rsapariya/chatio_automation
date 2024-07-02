@@ -1,0 +1,7 @@
+{
+    "require": {
+        "netflie/whatsapp-cloud-api": "^2.1",
+        "yidas/codeigniter-phpunit": "^1.1",
+        "yidas/codeigniter-queue-worker": "^1.0"
+    }
+}
