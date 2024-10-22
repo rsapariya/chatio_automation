@@ -304,15 +304,19 @@ $(document).on('change', '.notification_campaign', function(e){
 });
 
 $(document).on('click', '#btn-create-campaign', function(e){
+    let campaignBtn = document.querySelector('#btn-create-campaign');
+    campaignBtn.innerHTML = '<span class="loading-spinner"><i clas="fa fa-spinner fa-pulse"></i></span> Create Campaign';
+    campaignBtn.disabled = true;
     let data = jQuery("#create_campaign_form").serialize();
     let userMessage = document.querySelector('.user-message');
     userMessage.innerHTML = '';
-    jQuery.ajax({
+    /*jQuery.ajax({
         type: "POST",
         url: base_url + "campaigns/save",
         data: data,
         success: function (response) {
             let json = JSON.parse(response);
+            campaignBtn.disabled = false;
             if(json.error){
                 userMessage.innerHTML = '<div class="alert alert-light-danger alert-dismissible fade show border-0 mb-4" role="alert">'
                                 +'<button type="button" class="btn-close text-danger" data-bs-dismiss="alert" aria-label="Close">x</button> '+json.error+' </button></div>';
@@ -322,13 +326,16 @@ $(document).on('click', '#btn-create-campaign', function(e){
                 
                 setTimeout(function(){
                      window.location.href = base_url + "campaigns";
-                }, 1000)
+                }, 2000);
             }
         }
-    });
+    });*/
 });
 
 $(document).on('click', '#btn-create-failed-campaign', function(e){
+    let campaignBtn = document.querySelector('#btn-create-failed-campaign');
+    
+    campaignBtn.disabled = true;
     let data = jQuery("#create_failed_campaign_form").serialize();
     let userMessage = document.querySelector('.user-message');
     userMessage.innerHTML = '';
@@ -338,6 +345,7 @@ $(document).on('click', '#btn-create-failed-campaign', function(e){
         data: data,
         success: function (response) {
             let json = JSON.parse(response);
+            campaignBtn.disabled = false;
             if(json.error){
                 userMessage.innerHTML = '<div class="alert alert-light-danger alert-dismissible fade show border-0 mb-4" role="alert">'
                                 +'<button type="button" class="btn-close text-danger" data-bs-dismiss="alert" aria-label="Close">x</button> '+json.error+' </button></div>';

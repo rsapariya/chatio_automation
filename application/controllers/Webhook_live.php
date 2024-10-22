@@ -409,11 +409,11 @@ class Webhook_live extends CI_Controller {
 //                        }
 //                    }
 
-                    $reply_message_arr = $this->ReplyMessage_model->get_trigger_messages($this->business_account_id);
+                    /*$reply_message_arr = $this->ReplyMessage_model->get_trigger_messages($this->business_account_id);
                     if (!empty($reply_message_arr) && !empty($message)) {
                         $matched_keywords = array();
                         file_put_contents('Z_trigger_on.txt', $message.PHP_EOL, FILE_APPEND | LOCK_EX);
-                        /*foreach ($reply_message_arr as $reply_message) {
+                        foreach ($reply_message_arr as $reply_message) {
                             if(!key_exists($reply_message['reply_id'], $matched_keywords)){
                                 if (stripos($message, $reply_message['reply_text']) !== false) {
                                      if($reply_message['reply_text'] == $message){
@@ -427,8 +427,8 @@ class Webhook_live extends CI_Controller {
                         file_put_contents('Z_trigger_on.txt', $message.PHP_EOL, FILE_APPEND | LOCK_EX);
                         if(!empty($matched_keywords)){
                             file_put_contents('Z_trigger_on.txt', json_encode($matched_keywords).PHP_EOL, FILE_APPEND | LOCK_EX);
-                        }*/
-                    }
+                        }
+                    }*/
 
 
                     $reply_message_datas = $this->ReplyMessage_model->get_trigger_message_attachment($message, $this->business_account_id);
