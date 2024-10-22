@@ -550,3 +550,17 @@ $config['s3_bucket_name'] = 'WRITE_YOUR_S3_BUCKET_NAME';
 $config['s3_bucket_url'] = 'https://BUCKETNAME.s3.amazonaws.com';
 
 
+/* ================
+ * DatabaseDetail
+ * ================ */
+$config['hostname'] = '127.0.0.1';
+$config['username'] = 'wishes_official';
+$config['password'] = 'yj3kjbBNx6w7c3ws';
+$config['database'] = 'wishes_official';
+
+if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] == 'automation.chatio.io')) {
+    $config['hostname'] = 'localhost';
+    $config['username'] = 'automation_chatio';
+    $config['password'] = 'HNL8HKscHy8YSCzp';
+    $config['database'] = 'automation_chatio';
+}

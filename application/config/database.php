@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+include __DIR__ . '/config.php';
 
 /*
 | -------------------------------------------------------------------
@@ -73,12 +74,36 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
-$db['default'] = array(
+/*$db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => '127.0.0.1',
-	'username' => 'wishes_official',
-	'password' => 'yj3kjbBNx6w7c3ws',
-	'database' => 'wishes_official',
+        'username' => 'wishes_official',
+        'password' => 'yj3kjbBNx6w7c3ws',
+        'database' => 'wishes_official',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => (ENVIRONMENT !== 'production'),
+	'cache_on' => FALSE,
+	'cachedir' => '',
+	'char_set' => 'utf8mb4',
+	'dbcollat' => 'utf8mb4_unicode_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);*/
+
+
+
+$db['default'] = array(
+	'dsn'	=> '',
+	'hostname' => $config['hostname'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'database' => $config['database'],
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

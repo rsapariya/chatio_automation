@@ -430,7 +430,6 @@ class Webhook_live extends CI_Controller {
                         }
                     }*/
 
-
                     $reply_message_datas = $this->ReplyMessage_model->get_trigger_message_attachment($message, $this->business_account_id);
                     if (isset($reply_message_datas) && !empty($reply_message_datas)) {
 
