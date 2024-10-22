@@ -13,7 +13,7 @@
 	"require": {
 		"php": ">=5.3.7",
                 "takielias/codeigniter-websocket": "^1.0",
-		"phpoffice/phpspreadsheet": "*"
+		"phpoffice/phpspreadsheet": "^2.3"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"

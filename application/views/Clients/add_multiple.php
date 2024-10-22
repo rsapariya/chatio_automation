@@ -34,7 +34,7 @@
                     <div class="row">
                         <div class="col-xl-12 col-md-12 col-sm-12 col-12">
                             <div class="userMessage"></div>
-                            <form method="post" enctype="multipart/form-data" class="add_mutliple_client" novalidate>
+                            <form method="post" enctype="multipart/form-data" class="add_mutliple_client">
                                 <div class="row">
                                     <div class="col-lg-4 col-12 mt-2">
                                         <div class="form-group">
@@ -46,8 +46,9 @@
                                         </div> 
                                     </div>
                                 </div>
+                                
                                 <div class="row">
-                                    <div class="col-lg-3 col-12 mt-2">
+                                    <div class="col-lg-3 col-md-4 col-12 mt-2">
                                         <div class="form-group">
                                             <label for="hName">Upload File</label>
                                             <input type="file" class="form-control-file" id="client_file" name="client_file" placeholder="" accept=".xls, .xlsx" required>
@@ -56,8 +57,8 @@
                                                 <div class="invalid-feedback">Please upload a file</div>
                                         </div> 
                                     </div>
-                                    <div class=" col-12 map_columns table-responsive"></div>
-                                    <div class="col-12 mt-2">
+                                    <div class=" col-12 map_columns table-responsive mt-3"></div>
+                                    <div class="col-12 mt-3">
                                         <button class="btn btn-primary mb-2 me-4 _effect--ripple waves-effect waves-light btn-import-data">
                                             <span class="btn-text-inner">Import</span>
                                         </button>
@@ -69,6 +70,7 @@
                 </div>
             </div>
         </div>
+        <div class="contact_modal_block"></div>
     </div>
 </div>
 <script>

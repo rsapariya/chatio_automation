@@ -14,7 +14,7 @@ var automations_dttble = $('#reply_messages_dttble').DataTable({
         },
         "info": "Showing page _PAGE_ of _PAGES_"
     },
-    order: [[4, "desc"]],
+    order: [[0, "desc"]],
     ajax: {
         'type': 'GET',
         "url": base_url + 'replyMessage/list_reply_messages',
@@ -33,22 +33,6 @@ var automations_dttble = $('#reply_messages_dttble').DataTable({
             data: "reply_text",
             visible: true,
         },
-//        {
-//            data: "messages",
-//            visible: true,
-//            render: function (data, type, full, meta) {
-//                var messages = (full.messages != undefined && full.messages != '') ? JSON.parse(full.messages) : '';
-//                console.log(messages);
-//                var messages_text = '';
-//                if (messages != '') {
-//                    $.each(messages, function (i, item) {
-//                        var br_text = '<br/><br/>';
-//                        messages_text += (i == 1) ? i + ') ' + item : br_text + '' + i + ') ' + item;
-//                    });
-//                }
-//                return messages_text;
-//            }
-//        },
         {
             data: "attachments",
             visible: true,
@@ -94,10 +78,10 @@ var automations_dttble = $('#reply_messages_dttble').DataTable({
             render: function (data, type, full, meta) {
                 var is_template_default = (full.is_default != undefined && full.is_default != null) ? parseInt(full.is_default) : 0;
                 var action = '<td><ul class="table-controls">';
-                action += '<li><a href="' + base_url + 'replyMessage/edit/' + btoa(full.id) + '" title="Edit" class="btn btn-outline-primary"><i class="fa fa-pencil"></i></a></li>';
+                action += '<li><a href="' + base_url + 'replyMessage/edit/' + btoa(full.id) + '" class="btn btn-outline-primary bs-tooltip p-1" data-bs-placement="top" data-bs-original-title="Edit"><i class="fa fa-pencil p-1 br-6 mb-1"></i></a></li>';
                 //rewrite: RR
                 //action += '<li><a href="javascript:void(0)" onclick="delete_reply_message(' + full.id + ')"  title="Delete"><i class="flaticon-delete p-1 br-6 mb-1"></i></a></li>';
-                action += '<li><a href="javascript:void(0)" class="delete_reply_message btn btn-outline-danger" data-reply_id="'+ full.reply_id +'"  title="Delete"><i class="fa fa-trash"></i></a></li>';
+                action += '<li><a href="javascript:void(0)" class="delete_reply_message btn btn-outline-danger bs-tooltip p-1" data-reply_id="'+ full.reply_id +'" data-bs-placement="top" data-bs-original-title="Delete"><i class="fa fa-trash p-1 br-6 mb-1"></i></a></li>';
                 action += '</ul></td>';
                 return action;
             }
@@ -433,13 +417,13 @@ $(document).find('.btn-add-template').on('click', function (event) {
             '</div>' +
             '</div>' +
             '</div>';
+    
     $(document).find('.reply_message_attachment_details').append(html);
-    setTimeout(function () {
-        $(document).find(".basic").select2({
-            tags: true
-        });
-    }, 10);
-
+    //$().select2();
+    new TomSelect('#reply_template_' + seq,{
+        create: false,
+    });
+    
     add_change_event(seq);
 });
 

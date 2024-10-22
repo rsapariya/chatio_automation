@@ -1,7 +1,7 @@
 <?php
 
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+date_default_timezone_set("Asia/Kolkata");
 /*
   |--------------------------------------------------------------------------
   | Base Site URL
@@ -533,3 +533,20 @@ $config['rewrite_short_tags'] = FALSE;
   | Array:		array('10.0.1.200', '192.168.5.0/24')
  */
 $config['proxy_ips'] = '';
+
+
+
+/*
+  |---------------------------------------------------------------------------
+  | s3 Credentials
+  |---------------------------------------------------------------------------
+  |
+ */
+$config['s3_access_key'] = 'WRITE_YOUR_S3_ACCESS_KEY';
+$config['s3_secret_key'] = 'WRITE_YOUR_S3_SECRET_NAME';
+
+$config['s3_bucket_folder'] = 'WRITE_YOUR_S3_BUCKETS_FOLDER_NAME/';
+$config['s3_bucket_name'] = 'WRITE_YOUR_S3_BUCKET_NAME';
+$config['s3_bucket_url'] = 'https://BUCKETNAME.s3.amazonaws.com';
+
+

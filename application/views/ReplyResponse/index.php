@@ -29,12 +29,12 @@
                         <div class="col-xl-4 col-md-4 col-sm-4 col-4">
                             <div class="form-group ">
                                 <label>Trigger Text</label>
-                                <select data-placeholder="Select Trigger Text" id="trigger_text" class="form-control form-control-sm basic js-states" data-fouc>
-                                    <option value="">Select Trigger Text</option>;
+                                <select id="trigger_text" class="form-control">
+                                    <option value="">Select Trigger Text</option>
                                     <?php
                                     if (isset($responses) && !empty($responses)) {
                                         foreach ($responses as $response) {
-                                            echo '<option value="' . $response['response'] . '">' . $response['response'] . '</option> ';
+                                            echo '<option value="' . $response['message'] . '">' . $response['message'] . '</option> ';
                                         }
                                     }
                                     ?>

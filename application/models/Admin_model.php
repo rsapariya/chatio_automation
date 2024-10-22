@@ -23,12 +23,17 @@ class Admin_model extends CI_Model {
      * @author : HPA
      */
     public function get_user($email, $password) {
-        $this->db->where('email', $email);
-        $this->db->where('is_deleted', 0);
-        $users = $this->db->get(tbl_users);
+        
+        $this->db->select('u.*, us.time_zone');
+        $this->db->join(tbl_user_settings.' us', 'us.user_id= u.id', 'left');
+        $this->db->where('u.email', $email);
+        $this->db->where('u.is_deleted', 0);
+        
+        $users = $this->db->get(tbl_users.' u');
         $user_detail = $users->result_array();
         if (count($user_detail) == 1) {
             $db_password = $this->encrypt->decode($user_detail[0]['password']);
+            
             if ($db_password == $password) {
                 return $user_detail;
             } else {

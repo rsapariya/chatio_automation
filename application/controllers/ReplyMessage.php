@@ -55,6 +55,13 @@ class ReplyMessage extends CI_Controller {
                         }
                     }
                 }
+                
+                $tz_date = '';
+                if(!empty($record['created_at']) && $record['created_at'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($record['created_at']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$key]['created_at'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
             }
         }
         $final['data'] = $records;
@@ -152,6 +159,7 @@ class ReplyMessage extends CI_Controller {
                 $this->form_validation->set_rules('reply_meta_templates[]', 'Meta Template', 'trim|required');
             }
             $this->form_validation->set_rules('reply_text', 'Trigger Text', 'trim|required|callback_replytext_check');
+            //$this->form_validation->set_rules('trigger_on', 'Trigger On', 'trim|required');
             if (!empty($reply_templates)) {
                 $this->form_validation->set_rules('reply_templates[]', 'Custom Template', 'trim|required');
             }
@@ -410,9 +418,9 @@ class ReplyMessage extends CI_Controller {
                     $update_array['attachments_caption'] = json_encode($attachment_caption_arr);
                 }
 
+                
+                $trigger_on = $this->input->post('trigger_on');
                 if (is_numeric($reply_message_id)) {
-
-                    ##author : RR 
                     //fetch all data based on reply_id
                     $reply_id = $check_reply_message['reply_id'];
                     $user_id = $check_reply_message['user_id'];
@@ -443,8 +451,9 @@ class ReplyMessage extends CI_Controller {
                         }
                         $this->CMS_model->insert_batch(tbl_reply_messages, $ins_new_reply_text);
                     }
-
-
+                    
+                    
+                    $update_array['trigger_on'] = !empty($trigger_on) ? $trigger_on: '';
                     $this->CMS_model->update_record(tbl_reply_messages, $rdt_where, $update_array);
                     $this->session->set_flashdata('success_msg', 'Reply Message updated successfully !');
                 } else {
@@ -457,7 +466,10 @@ class ReplyMessage extends CI_Controller {
 
                     // $update_array['reply_id'] = $reply_id;
                     //$update_array['created_at'] = date('Y-m-d H:i:s');
-
+                    
+                    
+                    
+                    
                     if (!empty($reply_text)) {
                         foreach ($reply_text as $text) {
                             $new_update_array[] = array(
@@ -471,6 +483,7 @@ class ReplyMessage extends CI_Controller {
                                 'attachments_caption' => $update_array['attachments_caption'],
                                 'user_id' => $update_array['user_id'],
                                 'created_at' => date('Y-m-d H:i:s'),
+                                'trigger_on' => !empty($trigger_on) ? $trigger_on: ''
                             );
                         }
                     }

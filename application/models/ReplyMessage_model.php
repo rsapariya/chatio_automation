@@ -14,7 +14,7 @@ class ReplyMessage_model extends CI_Model {
         $start = $this->input->get('start');
 //        $columns = ['rm.id', 'rm.reply_text', 'rm.messages', 'rm.attachments', 'rm.created_at', 'rm.is_deleted'];
         $columns = ['rm.id', 'reply_text', 'rm.attachments', 'rm.created_at', 'rm.is_deleted'];
-        $select = 'rm.id,@a:=@a+1 AS test_id,rm.reply_text,GROUP_CONCAT(rm.reply_text SEPARATOR ",") AS reply_text,rm.messages,rm.attachments,DATE_FORMAT(rm.created_at,"%d %b %Y <br> %l:%i %p") AS created_at,rm.is_deleted,rm.user_id,rm.reply_id';
+        $select = 'rm.id,@a:=@a+1 AS test_id,rm.reply_text,GROUP_CONCAT(rm.reply_text SEPARATOR ",") AS reply_text,rm.messages,rm.attachments,rm.created_at AS created_at,rm.is_deleted,rm.user_id,rm.reply_id';
         $this->db->select($select, false);
         $this->db->where(['rm.is_deleted' => 0]);
         $keyword = $this->input->get('search');
@@ -29,7 +29,7 @@ class ReplyMessage_model extends CI_Model {
 //        $this->db->where('rm.reply_id is not NULL');
         $this->db->group_by('rm.reply_id');
         $order = $this->input->get('order');
-        if(!empty($order)){
+        if (!empty($order)) {
             $this->db->order_by($columns[$this->input->get('order')[0]['column']], $this->input->get('order')[0]['dir']);
         }
         if (is_null($count)):
@@ -67,6 +67,22 @@ class ReplyMessage_model extends CI_Model {
             endif;
             $this->db->limit('1');
             $res_data = $this->db->get(tbl_reply_messages)->row_array();
+            if (!empty($res_data) && !empty($permanent_access_token)) {
+                $res_data['permanent_access_token'] = $permanent_access_token;
+            }
+        }
+        return $res_data;
+    }
+    
+    
+    public function get_trigger_messages($business_account_id) {
+        $res_data = array();
+        $permanent_access_token = '';
+        $user_setting_data = $this->db->get_where(tbl_user_settings, array('business_account_id' => $business_account_id)) ->row_array();
+        if (!empty($user_setting_data)) {
+            $user_id = $user_setting_data['user_id'];
+            $permanent_access_token = $user_setting_data['permanent_access_token'];
+            $res_data = $this->db->get_where(tbl_reply_messages, array('is_deleted' => 0, 'user_id' => $user_id)) ->result_array();
             if (!empty($res_data) && !empty($permanent_access_token)) {
                 $res_data['permanent_access_token'] = $permanent_access_token;
             }
@@ -133,20 +149,48 @@ class ReplyMessage_model extends CI_Model {
     }
 
     /*
-    * @uses: check multiple reply text
-    * @author : RR 
-    * @require : reply_text(as a string), user_id, reply_id
-    */
-    public function check_replytext($reply_text, $user_id, $reply_id = ''){
+     * @uses: check multiple reply text
+     * @author : RR 
+     * @require : reply_text(as a string), user_id, reply_id
+     */
+
+    public function check_replytext($reply_text, $user_id, $reply_id = '') {
         $this->db->where_in('reply_text', $reply_text);
-        $this->db->where('user_id',$user_id);
+        $this->db->where('user_id', $user_id);
         if (!empty($reply_id)) {
-            $this->db->where('reply_id !=',$reply_id);
+            $this->db->where('reply_id !=', $reply_id);
         }
         $query = $this->db->get(tbl_reply_messages);
         echo $this->db->last_query();
         return $query->num_rows();
-        
+    }
+
+    public function get_trigger_chatboat_message($message = '', $business_account_id = '') {
+        $res_data = $chatboat_next_data = array();
+        $this->db->where(['business_account_id' => $business_account_id]);
+        $this->db->limit('1');
+        $user_setting_data = $this->db->get(tbl_user_settings)->row_array();
+        $permanent_access_token = '';
+        if (isset($user_setting_data) && !empty($user_setting_data)) {
+            $user_id = $user_setting_data['user_id'];
+            $permanent_access_token = $user_setting_data['permanent_access_token'];
+            $message = trim($message);
+            $this->db->where(['value' => $message, 'type' => 'text', 'chatboat_order' => 1]);
+            if ($user_id > 0):
+                $where_user = ' (user_id = ' . $user_id . ') ';
+                $this->db->where($where_user);
+            endif;
+            $this->db->limit('1');
+            $res_data = $this->db->get('chatboat_datas')->row_array();
+            if (!empty($res_data)) {
+                $this->db->where(['chatboat_order' => ($res_data['chatboat_order'] + 1), 'chatboat_id' => $res_data['chatboat_id'], 'user_id' => $res_data['user_id']]);
+                $chatboat_next_data = $this->db->get('chatboat_datas')->row_array();
+                if (!empty($chatboat_next_data) && !empty($permanent_access_token)) {
+                    $chatboat_next_data['permanent_access_token'] = $permanent_access_token;
+                }
+            }
+        }
+        return $chatboat_next_data;
     }
 
 }

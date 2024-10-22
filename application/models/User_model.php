@@ -42,12 +42,12 @@ class User_model extends CI_Model {
             $id = $this->session->userdata('id');
         }
         $start = $this->input->get('start');
-        $columns = ['u.id', 'u.name', 'u.email', 'u.phone_number_full', 'u.birth_date', 'u.anniversary_date', 'u.created_at', 'u.is_deleted'];
-        $this->db->select('u.id,@a:=@a+1 AS test_id,u.name,u.phone_number,u.phone_number_full,DATE_FORMAT(u.created_at,"%d %b %Y <br> %l:%i %p") AS created_at,u.is_deleted,u.email,DATE_FORMAT(u.birth_date,"%d %b %Y")AS cust_birth_date,DATE_FORMAT(u.anniversary_date,"%d %b %Y")AS cust_anniversary_date', false);
-        $this->db->where(['u.is_deleted' => 0, 'user_id' => $id]);
+        $columns = ['u.id', 'u.name', 'u.phone_number_full','u.group_ids', 'u.created_at', 'u.is_subscribed','u.is_deleted'];
+        $this->db->select('u.id,@a:=@a+1 AS test_id,u.name,u.phone_number,u.phone_number_full,u.created_at AS created_at,u.is_deleted, u.group_ids, u.is_subscribed', false);
+        $this->db->where(['u.is_deleted' => 0, 'u.user_id' => $id]);
         $keyword = $this->input->get('search');
         if (!empty($keyword['value'])) {
-            $this->db->having('u.email LIKE "%' . $keyword['value'] . '%" OR u.name LIKE "%' . $keyword['value'] . '%" OR u.phone_number LIKE "%' . $keyword['value'] . '%" OR u.phone_number_full LIKE "%' . $keyword['value'] . '%"  OR cust_birth_date LIKE "%' . $keyword['value'] . '%" OR created_at LIKE "%' . $keyword['value'] . '%" OR cust_anniversary_date LIKE "%' . $keyword['value'] . '%"', NULL);
+            $this->db->having(' u.name LIKE "%' . $keyword['value'] . '%" OR u.phone_number LIKE "%' . $keyword['value'] . '%" OR u.phone_number_full LIKE "%' . $keyword['value'] . '%" OR created_at LIKE "%' . $keyword['value'] . '%" OR u.group_ids LIKE "%' . $keyword['value'] . '%"', NULL);
         }
 
         $order = $this->input->get('order');
@@ -93,6 +93,29 @@ class User_model extends CI_Model {
         $this->db->where('t.type', $type);
         $this->db->join(tbl_indiamart_customer_leads . ' cl', 'cl.id = l.lead_id');
         $res_data = $this->db->get(tbl_templates . ' t')->row_array();
+    }
+    
+    public function get_contacts($userid, $tags){
+        if(!empty($tags)){
+            $columns = 'DISTINCT(phone_number_full) as contact, name, birth_date,anniversary_date, column1, column2, column3, column4, column5, column6, column7, column8, column9, column10';
+            $this->db->select($columns, false);
+            /*$this->db->like('group_ids', $tags[0]);
+            for($i = 1; $i < count($tags); $i++){
+                $this->db->or_like('group_ids', $tags[$i]);
+            }*/
+            $this->db->group_start(); // Start a grouping for AND conditions
+            foreach ($tags as $tag) {
+                $this->db->or_where("FIND_IN_SET('$tag', group_ids) >", 0);
+            }
+            $this->db->group_end();
+            
+            $this->db->where('user_id', $userid);
+            $this->db->where('is_deleted !=',  1);
+            $this->db->where('is_subscribed',  1);
+            $res_data = $this->db->get(tbl_clients)->result_array();
+            return $res_data;
+        }
+        return null;
     }
 
 }

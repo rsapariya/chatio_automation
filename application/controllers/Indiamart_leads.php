@@ -50,10 +50,20 @@ class Indiamart_leads extends CI_Controller {
         $final['recordsTotal'] = $this->Indiamart_inquiries_model->get_all_leads('count', $user_id);
         $final['redraw'] = 1;
         $final['recordsFiltered'] = $final['recordsTotal'];
-        $final['data'] = $this->Indiamart_inquiries_model->get_all_leads(null, $user_id);
-        foreach($final['data'] as $index => $data){
-            $final[$index]['query_time'] = !empty($data['query_time']) && $data['query_time'] !== '0000-00-00 00:00:00' ? $data['query_time'] : '';
+        $records = $this->Indiamart_inquiries_model->get_all_leads(null, $user_id);
+        
+        if(!empty($records)){
+            foreach ($records as $rdk =>$rd){
+                $tz_date = '';
+                if(!empty($rd['query_time']) && $rd['query_time'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['query_time']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['query_time'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
         }
+        $final['data'] = $records;
+        
         echo json_encode($final);
     }
 
@@ -65,10 +75,18 @@ class Indiamart_leads extends CI_Controller {
         $final['recordsTotal'] = $this->Indiamart_inquiries_model->get_tradeindia_leads('count', $user_id);
         $final['redraw'] = 1;
         $final['recordsFiltered'] = $final['recordsTotal'];
-        $final['data'] = $this->Indiamart_inquiries_model->get_tradeindia_leads(null, $user_id);
-        foreach($final['data'] as $index => $data){
-            $final[$index]['query_time'] = !empty($data['query_time']) && $data['query_time'] !== '0000-00-00 00:00:00' ? $data['query_time'] : '';
+        $records = $this->Indiamart_inquiries_model->get_tradeindia_leads(null, $user_id);
+        if(!empty($records)){
+            foreach ($records as $rdk =>$rd){
+                $tz_date = '';
+                if(!empty($rd['query_time']) && $rd['query_time'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['query_time']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['query_time'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
         }
+        $final['data'] = $records;
         echo json_encode($final);
     }
 
@@ -80,10 +98,18 @@ class Indiamart_leads extends CI_Controller {
         $final['recordsTotal'] = $this->Indiamart_inquiries_model->get_exportersindia_leads('count', $user_id);
         $final['redraw'] = 1;
         $final['recordsFiltered'] = $final['recordsTotal'];
-        $final['data'] = $this->Indiamart_inquiries_model->get_exportersindia_leads(null, $user_id);
-        foreach($final['data'] as $index => $data){
-            $final[$index]['query_time'] = !empty($data['query_time']) && $data['query_time'] !== '0000-00-00 00:00:00' ? $data['query_time'] : '';
+        $records = $this->Indiamart_inquiries_model->get_exportersindia_leads(null, $user_id);
+        if(!empty($records)){
+            foreach ($records as $rdk =>$rd){
+                $tz_date = '';
+                if(!empty($rd['query_time']) && $rd['query_time'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['query_time']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['query_time'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
         }
+        $final['data'] = $records;
         echo json_encode($final);
 
     }
@@ -181,9 +207,10 @@ class Indiamart_leads extends CI_Controller {
        
         //pr($final['data'], true);
         foreach($final['data'] as $index => $data){
-            $final[$index]['created'] = !empty($data['created']) && $data['created'] !== '0000-00-00 00:00:00' ? $data['created'] : '';
-            $final[$index]['deliver_time'] = !empty($data['deliver_time']) && $data['deliver_time'] !== '0000-00-00 00:00:00' ? $data['deliver_time'] : '';
-            $final[$index]['read_time'] = !empty($data['read_time']) && $data['read_time'] !== '0000-00-00 00:00:00' ? $data['read_time'] : '';
+            
+            $final[$index]['created'] = !empty($data['created']) && $data['created'] !== '0000-00-00 00:00:00' ? getTimeBaseOnTimeZone($data['created']) : '';
+            $final[$index]['deliver_time'] = !empty($data['deliver_time']) && $data['deliver_time'] !== '0000-00-00 00:00:00' ? getTimeBaseOnTimeZone($data['deliver_time']) : '';
+            $final[$index]['read_time'] = !empty($data['read_time']) && $data['read_time'] !== '0000-00-00 00:00:00' ? getTimeBaseOnTimeZone($data['read_time']) : '';
         }
         echo json_encode($final);
     }

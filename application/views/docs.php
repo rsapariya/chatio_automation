@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
-        <title><?php echo (isset($title) && $title != '') ? $title : 'Wishes - Admin Panel' ?></title>
+        <title><?php echo (isset($title) && $title != '') ? $title : 'Automation API' ?></title>
         <link rel="icon" type="image/x-icon" href="<?php echo DEFAULT_ADMIN_IMAGE_PATH ?>favicon.ico"/>
 
         <!-- BEGIN GLOBAL MANDATORY STYLES -->
@@ -36,7 +36,7 @@
 
         <!--  BEGIN MAIN CONTAINER  -->
         <div class="main-container" id="container">
-
+            
             <!--  BEGIN CONTENT AREA  -->
             <div id="content" class="main-content">
                 <div class="layout-px-spacing">
@@ -58,7 +58,55 @@
                                                     <img src="<?php echo DEFAULT_ADMIN_IMAGE_PATH ?>docs/access-token.png" class="full-width img-fluid mt-4 mb-5">
                                                 </li>    
                                             </ul>
-                                            <div class="mt-4">
+                                            <div class="mt-3">
+                                                <h3>Message Types</h3>
+                                                <ul>
+                                                    <li><a href="#formalized-text-message">Formalize Text Messages</a></li>
+                                                    <li><a href="#template-message">Template Messages</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="mt-4" id="formalized-text-message">
+                                                <h2>Formalize Text Messages</h2>
+                                                <p>Text messages are messages containing only a text body and an optional link preview.</p>
+                                                
+                                                <div>
+                                                    <h6>Link Preview</h6>
+                                                    <p class="mt-2 mb-2">You can render a preview of the first URL in the body text string, if it contains one. URLs must begin with http:// or https://. If multiple URLs are in the body text string, only the first URL will be rendered.</p>
+                                                    <p class="mt-2 mb-2">If omitted, or if unable to retrieve a link preview, a clickable link will be rendered instead.</p>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <p class="text-muted mt-3 mb-3">Sample request:</p>
+                                                    <div class="bg-dark m-2 p-3">
+                                                        <pre>
+<span class="pln">curl </span><span class="pun">-</span><span class="pln">X  POST \</span>
+ <span class="text-success">'<?php echo base_url() ?>api/messages'</span><span class="pln"> \</span>
+ <span class="pun">-</span><span class="pln">H </span><span class="str text-success">'Authorization: Bearer ACCESS_TOKEN'</span><span class="pln"> \
+ </span><span class="pun">-</span><span class="pln">H </span><span class="str text-success">'Content-Type: application/json'</span><span class="pln"> \
+ </span><span class="pun">-</span><span class="pln">d </span><span class="str text-success">'{
+        "to": "PHONE_NUMBER", <span class="text-muted">//With + sign and country code</span>
+        "type": "text",
+        "text": {
+        "preview_url": true, <span class="text-muted">//<b>true</b>: if your text contain URL. <b>false</b>: if your text not contain any URL.</span>
+          "body": "As requested, here's the link to our latest product: <?php echo base_url() ?>api/docs"
+        }
+      }'</span></pre>
+                                                    </div>
+                                                    <p class="text-muted mt-3 mb-3">A successful response</p>
+                                                    <div class="bg-dark m-2 p-3">
+                                                        <pre>
+<span class="text-success">{
+  "success": {
+    "message": "Message accepted.",
+    "code": 200
+  }
+}    
+</span></pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            
+                                            <div class="mt-4" id="template-message">
                                                 <h2>Template Messages</h2>
                                                 <p>Before sending a template message, get verified your WhatsApp Business Account.</p>
                                                 <p>Then you need to create a template. See <a href="https://www.facebook.com/business/help/2055875911147364?id=2129163877102343" target="_blank">Create Message Templates for Your WhatsApp Business Account</a> for more information</p>

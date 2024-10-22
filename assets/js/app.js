@@ -867,6 +867,242 @@ var App = function() {
 
 }();
 
+$(document).ready(function() {
+    $('.select-search').select2({
+        width: '100%'
+    });
+});
 document.addEventListener('load', function() {
     App.init('layout');
-})
+});
+
+$(document).on('change','.upload_temp_media', function(e){
+    let dataSeq = $(this).closest('.automation_template_details_div').attr('data-seq');
+    
+    let error;
+    let tempPreview;
+    let automationDiv;
+    if(dataSeq != undefined){
+        automationDiv = document.querySelector('#automation_template_div_'+dataSeq);
+        error = automationDiv.querySelector('.upload_temp_media_err');
+        tempPreview = automationDiv.querySelector('.temp_header_preview');
+    }else{
+        error = document.querySelector('.upload_temp_media_err');
+        tempPreview = document.querySelector('.temp_header_preview');
+    }
+    
+    error.innerHTML = '<b><i class="fa fa-pulse fa-spinner"></i> Please wait...</b>';
+    const fileInput = e.target;
+    const formElement = fileInput.closest('form');
+    const acceptedFile = fileInput.getAttribute('accept');
+    const allowedTypes = acceptedFile.split(',').map(type => type.trim());
+    
+    const file = fileInput.files[0];
+    if(file != undefined && formElement != undefined){
+        let fileSize = file.size;
+        let fileType = file.type;
+        
+        if( fileSize > 0){
+            if(allowedTypes.includes(fileType)){
+                let maxFileSize = 50;
+                if(fileType == 'image/png' || fileType == 'image/jpeg' || fileType == 'image/jpg'){
+                    maxFileSize = 5;
+                 }
+                if(fileType == 'video/mp4' || fileType == 'video/3gp' || fileType == 'application/pdf'){
+                    maxFileSize = 50;
+                }
+                
+                let fsMB = Math.ceil(parseInt(file.size)/(1024 * 1024));
+
+                let formID = formElement.id;
+                if(fsMB < maxFileSize){
+
+                    if(tempPreview){
+                        tempPreview.innerHTML = '';
+                    }
+
+                    let data = new FormData($("#"+formID)[0]);
+                    data.append('filename', 'file');
+                    data.append('file_type', fileType);
+                    jQuery.ajax({
+                        type: "POST",
+                        url: base_url + "dashboard/upload_file",
+                        data: data,
+                        async: true,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            let json = JSON.parse(response); 
+                            if(json.status){
+                                let form = document.querySelector('#send_template_frm');
+                                let tempMedia;
+                                if(dataSeq != undefined){
+                                    tempMedia = automationDiv.querySelector('#temp_media');
+                                }else{
+                                    tempMedia = document.querySelector('#temp_media');
+                                }
+                                
+                                if(tempMedia){
+                                    tempMedia.value = json.url
+                                }
+                                
+                                let innerHTML = '';
+                                if(fileType == 'image/png' || fileType == 'image/jpeg' || fileType == 'image/jpg'){ 
+                                   innerHTML += '<img src="'+json.watermark_url+'" height="100px" />';
+                                }
+                                if(fileType == 'video/mp4' || fileType == 'video/3gp'){
+                                   innerHTML += '<video width="240" height="160" src="'+json.url+'" controls>Your browser does not support the video tag.</video>';
+                                }
+                                if(fileType == 'application/pdf'){
+                                   innerHTML += '<a href="'+json.url+'" target="_blank">Check Document</a>';
+                                }
+                                tempPreview.innerHTML = innerHTML;
+                            }else{
+                                error.innerHTML = '<b class="text-warning">Something went wrong</b>';
+                            }
+                        }
+                    });
+                }else{
+                    fileInput.value = '';
+                    tempPreview.innerHTML = '';
+                    error.innerHTML = '<b class="text-warning">Maximum 5MB file size is allowed</b>';
+                }
+            }else{
+                fileInput.value = '';
+                tempPreview.innerHTML = '';
+                error.innerHTML = '<b class="text-warning">Only allowed '+acceptedFile+' type files.</b>';
+            }
+            setTimeout(function(){
+                error.innerHTML = '';
+            }, 5000);
+        }
+    }else{
+         error.innerHTML = '<b class="text-danger">Something went wrong</b>';
+    }
+});
+
+$(document).on('change','.card_upload_temp_media', function(e){
+    const fileInput = e.target;
+    let This = $(this);
+    let card = This.data('cardid');
+    
+    let dataSeq = $(this).closest('.automation_template_details_div').attr('data-seq');
+    
+    let error;
+    let tempPreview;
+    let automationDiv;
+    if(dataSeq != undefined){
+        automationDiv = document.querySelector('#automation_template_div_'+dataSeq);
+        error = automationDiv.querySelector('.card_upload_temp_media_err_'+card);
+        tempPreview = automationDiv.querySelector('.card_media_preview_'+card);
+    }else{
+        error = document.querySelector('.card_upload_temp_media_err_'+card);
+        tempPreview = document.querySelector('.card_media_preview_'+card);
+    }
+    error.innerHTML = '<b><i class="fa fa-pulse fa-spinner"></i> Please wait...</b>';
+    const formElement = fileInput.closest('form');
+    const acceptedFile = fileInput.getAttribute('accept');
+    const allowedTypes = acceptedFile.split(',').map(type => type.trim());
+    
+    const file = fileInput.files[0];
+    if(file != undefined && formElement != undefined){
+        let fileSize = file.size;
+        let fileType = file.type;
+        
+        if( fileSize > 0){
+            if(allowedTypes.includes(fileType)){
+                let maxFileSize = 50;
+                if(fileType == 'image/png' || fileType == 'image/jpeg' || fileType == 'image/jpg'){
+                    maxFileSize = 5;
+                 }
+                if(fileType == 'video/mp4' || fileType == 'video/3gp' || fileType == 'application/pdf'){
+                    maxFileSize = 50;
+                }
+                let fsMB = Math.ceil(parseInt(file.size)/(1024 * 1024));
+                let formID = formElement.id;
+                if(fsMB < maxFileSize){
+                    let data = new FormData($("#"+formID)[0]);
+                    data.append('filename', 'file_'+card);
+                    jQuery.ajax({
+                        type: "POST",
+                        url: base_url + "dashboard/upload_file",
+                        data: data,
+                        async: true,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            
+                            
+                            
+                            if(tempPreview){
+                                tempPreview.innerHTML = '';
+                            }
+                            let json = JSON.parse(response);
+                            if(json.status){
+                                let cardMedia;
+                                if(dataSeq != undefined){
+                                    cardMedia = automationDiv.querySelector('#card_media_'+card);
+                                }else{
+                                    cardMedia = document.querySelector('#card_media_'+card);
+                                }
+                                if(cardMedia){
+                                    cardMedia.value = json.url
+                                }
+                                let innerHTML = '';
+                                if(fileType == 'image/png' || fileType == 'image/jpeg' || fileType == 'image/jpg'){
+                                   innerHTML += '<img src="'+json.url+'" height="100px" />';
+                                }
+                                if(fileType == 'video/mp4' || fileType == 'video/3gp'){
+                                   innerHTML += '<video width="240" height="160" src="'+json.url+'" controls>Your browser does not support the video tag.</video>';
+                                }
+                                tempPreview.innerHTML = innerHTML;
+                            }else{
+                                error.innerHTML = '<b class="text-warning">Something went wrong</b>';
+                            }
+                        }
+                    });
+                }else{
+                    fileInput.value = '';
+                    tempPreview.innerHTML = '';
+                    error.innerHTML = '<b class="text-warning">Maximum 5MB file size is allowed</b>';
+                }
+            }else{
+                fileInput.value = '';
+                tempPreview.innerHTML = '';
+                error.innerHTML = '<b class="text-warning">Only allowed '+acceptedFile+' type files.</b>';
+            }    
+             
+            setTimeout(function(){
+                error.innerHTML = '';
+            }, 2000);
+        }
+    }
+});
+
+/*
+$(document).on('blur','.dynamic_text', function(){
+    let text = $(this).val();
+    let url = document.querySelector('#origin_temp_media').value;
+    if(url != '' && text != ''){
+        let tempPreview = document.querySelector('.temp_header_preview');
+        tempPreview.innerHTML = ''; 
+        jQuery.ajax({
+            type: "POST",
+            url: base_url + "dashboard/image_watermark",
+            data: {'text': text, 'url' : url},
+            success: function (response) {
+                let json = JSON.parse(response); 
+                if(json.status){
+                    let tempMedia = document.querySelector('#temp_media');
+                    if(tempMedia){ 
+                        tempMedia.value = json.watermark_url
+                    }
+                    
+                    tempPreview.innerHTML = '<img src="'+json.watermark_url+'" height="100px" />';
+                }
+            }
+        });
+    }
+    
+});
+*/

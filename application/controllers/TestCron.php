@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 use Netflie\WhatsAppCloudApi\WhatsAppCloudApi;
 use Netflie\WhatsAppCloudApi\Request;
@@ -13,12 +13,17 @@ use Netflie\WhatsAppCloudApi\Message\OptionsList\Section;
 use Netflie\WhatsAppCloudApi\Message\OptionsList\Action;
 use Netflie\WhatsAppCloudApi\Message\ButtonReply\Button;
 use Netflie\WhatsAppCloudApi\Message\ButtonReply\ButtonAction;
+use Netflie\WhatsAppCloudApi\Message\Contact\ContactName;
+use Netflie\WhatsAppCloudApi\Message\Contact\Phone;
+use Netflie\WhatsAppCloudApi\Message\Contact\PhoneType;
 
-class TestCron extends CI_Controller {
+class TestCron extends CI_Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
-        $this->load->model(['CMS_model', 'Indiamart_inquiries_model', 'Tradeindia_inquiries_model', 'ReplyMessage_model']);
+        $this->load->model(['CMS_model', 'Indiamart_inquiries_model', 'Tradeindia_inquiries_model', 'ReplyMessage_model', 'Automation_model']);
         $this->glusr_crm_key = '';
         $this->phone_number_id = '';
         $this->permanent_access_token = '';
@@ -33,7 +38,8 @@ class TestCron extends CI_Controller {
         $this->exportersindia_email = '';
     }
 
-    public function get_all_inquiries() {
+    public function get_all_inquiries()
+    {
 
         $users_cred = $this->Indiamart_inquiries_model->get_allowed_crm_users_credential();
         if (!empty($users_cred)) {
@@ -192,7 +198,8 @@ class TestCron extends CI_Controller {
         }
     }
 
-    public function get_tradeind_inquiries() {
+    public function get_tradeind_inquiries()
+    {
 
         $credentials = $this->Indiamart_inquiries_model->get_allowed_crm_users_credential(crm_tradeindia);
 
@@ -345,7 +352,8 @@ class TestCron extends CI_Controller {
         }
     }
 
-    public function get_exportersind_inquiries() {
+    public function get_exportersind_inquiries()
+    {
         $credentials = $this->Indiamart_inquiries_model->get_allowed_crm_users_credential(crm_exportersindia);
         if (!empty($credentials)) {
             foreach ($credentials as $cred) {
@@ -500,7 +508,8 @@ class TestCron extends CI_Controller {
         }
     }
 
-    public function curl_api($url) {
+    public function curl_api($url)
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         // curl_setopt($ch, CURLOPT_POSTFIELDS, trim($fields_string));
@@ -514,7 +523,8 @@ class TestCron extends CI_Controller {
         return $ch_result;
     }
 
-    public function send_inquiry_msg($data = []) {
+    public function send_inquiry_msg($data = [])
+    {
         if (empty($data)) {
             $data = array(
                 'user_id' => 30,
@@ -551,10 +561,8 @@ class TestCron extends CI_Controller {
                         $post_data['template'] = $template_name = $template_info['name'];
                         $post_data['language'] = $template_language = $template_info['temp_language'];
                         $message_arr = array(
-                            'template' => array(
-                                'name' => $template_name,
-                                'language' => array('code' => $template_language)
-                            ),
+                            'name' => $template_name,
+                            'language' => array('code' => $template_language)
                         );
                         $temp_param = $inquiry_temp['temp_param'];
                         $post_data['components'] = $temp_param;
@@ -583,16 +591,16 @@ class TestCron extends CI_Controller {
                         $components = new Component($component_header, $component_body, $component_buttons);
                         $components_arr = [];
                         if (!empty($component_header)) {
-                            $components_arr = array('header' => array('parameters' => $component_header));
+                            $components_arr['components'][] = array('type' => 'header', 'parameters' => $component_header);
                         }
                         if (!empty($component_body)) {
-                            $components_arr = array('body' => array('parameters' => $component_body));
+                            $components_arr['components'][] = array('type' => 'body', 'parameters' => $component_body);
                         }
                         if (!empty($component_buttons)) {
-                            $components_arr = array('buttons' => array('parameters' => $component_buttons));
+                            $components_arr['components'][] = array('type' => 'buttons', 'parameters' => $component_buttons);
                         }
-                        $message_arr = array_merge($message_arr, $components_arr);
-                        $chat_logs['message'] = json_encode($message_arr);
+                        $message_decode['template'] = array_merge($message_arr, $components_arr);
+                        $chat_logs['message'] = json_encode($message_decode);
                         try {
                             $wa_response = $this->whatsapp_app_cloud_api->sendTemplate($sender_mobile, $post_data['template'], $post_data['language'], $components);
                             if (!empty($wa_response)) {
@@ -613,7 +621,8 @@ class TestCron extends CI_Controller {
         }
     }
 
-    public function notify_receiver($notify_data = []) {
+    public function notify_receiver($notify_data = [])
+    {
         if (!empty($notify_data)) {
 
             $user_id = $notify_data[1];
@@ -662,7 +671,34 @@ class TestCron extends CI_Controller {
         }
     }
 
-    public function testing_msg() {
+    /* public function automation(){
+      $automations = $this->Automation_model->get_automations();
+      if(!empty($automations)){
+      foreach($automations as $au){
+      pr($au);
+      $au_details = !empty($au['details']) ? json_decode($au['details'], 1) : '';
+      $delay = 0;
+      if(!empty($au_details)){
+      $credentials = $this->CMS_model->get_result(tbl_user_settings, 'user_id =' . $au['user_id'], null, 1);
+      //pr($credentials, 1);
+      foreach($au_details as $dt){
+      if(str_contains($dt, 'Minutes') || str_contains($dt, 'Hours') || str_contains($dt, 'Days') || str_contains($dt, 'Weeks')){
+      $delay = $dt;
+      }else{
+      $where_au = 'automation_id = '.$dt.' AND user_id =' . $au['user_id'];
+      $contacts = $this->CMS_model->get_result(tbl_clients, $where_au, null, 1);
+      echo $this->db->last_query();
+      pr($contacts);
+      }
+      }
+      }
+      //exit();
+      }
+      }
+      } */
+
+    public function testing_msg()
+    {
         $whatsapp_cloud_api = new WhatsAppCloudApi([
             'from_phone_number_id' => '218390051360010',
             'access_token' => 'EAAVZCbpuIeqkBOwDEnunMoiRqgS5s4TuwpuZBtee7QMdGSPST5kzKbohVF8Ldnbp6uIQwVElqsYtcXOzSAjCkkS7RpQBK1T59EkL4FomZCazxyTJg3Y1qtpNkt7a9JTjyBcnhuZC9mtRvNx6EstQTEFsw0oP9tfdQekb6ihXq5l3BNAfZBIebZBYj8Y67tksXG',
@@ -683,7 +719,8 @@ class TestCron extends CI_Controller {
         $whatsapp_cloud_api->sendTemplate('+919510482966', 'confirm_meeting', 'en', $components);
     }
 
-    function send_template() {
+    function send_template()
+    {
         $whatsapp_cloud_api = new WhatsAppCloudApi([
             'from_phone_number_id' => '265225076680517',
             'access_token' => 'EAAZAZCieHoCEIBO6R1twZB7jVJWnC8riv0COplYt3LZCh2tg5lu8ZC6ccBLJpuk1KVhwpZAVJGVL2DnBDM94luP2bPAGJkBD5nBBq9dx3vCshRyMEbpdP0jm6JjJXjmNbi5vonnNwNCJwifrD3GQMm4jHZBmp7WRLh7nsaW7JHuMH9a0DkozQK2vV8qIDi11AcX',
@@ -691,7 +728,8 @@ class TestCron extends CI_Controller {
         $whatsapp_cloud_api->sendTemplate('+919537800320', 'hello_world', 'en_US');
     }
 
-    function downloadMedia() {
+    function downloadMedia()
+    {
         $whatsapp_cloud_api = new WhatsAppCloudApi([
             'from_phone_number_id' => '265225076680517',
             'access_token' => 'EAAZAZCieHoCEIBO6R1twZB7jVJWnC8riv0COplYt3LZCh2tg5lu8ZC6ccBLJpuk1KVhwpZAVJGVL2DnBDM94luP2bPAGJkBD5nBBq9dx3vCshRyMEbpdP0jm6JjJXjmNbi5vonnNwNCJwifrD3GQMm4jHZBmp7WRLh7nsaW7JHuMH9a0DkozQK2vV8qIDi11AcX',
@@ -711,4 +749,9 @@ class TestCron extends CI_Controller {
         pr($body, 1);
     }
 
+    public function sendContact()
+    {
+        $responseData = send_contact(array(), '');
+        pr($responseData, 1);
+    }
 }

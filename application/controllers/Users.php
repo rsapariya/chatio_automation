@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Users extends CI_Controller {
 
@@ -114,8 +114,6 @@ class Users extends CI_Controller {
                 $this->form_validation->set_rules('password', 'Password', 'trim|required');
             }
 
-
-
             if ($this->form_validation->run() == FALSE) {
                 $this->session->set_flashdata('error_msg', validation_errors());
                 $url = base_url() . 'users/add';
@@ -209,10 +207,13 @@ class Users extends CI_Controller {
             }
             $where = 'user_id = ' . $this->db->escape($user_id);
             $this->data['user_settings'] = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1, null, 'id', 'desc');
-            $this->data['templates'] = get_user_meta_templates();
+            $this->data['templates'] = get_user_meta_templates($user_id);
             $this->data['time_zone'] = get_time_zone();
-            if ($this->data['user_settings']) {
-                if($this->data['user_settings']['message_on_inquiry']) {
+            
+            $tgwhere = 'user_id = ' . $this->db->escape($user_id);
+            $this->data['user_tags'] = $this->CMS_model->get_result(tbl_tags, $tgwhere, 'id as value,tag as name, user_id', null, null, 'id', 'DESC');
+            if ($this->session->userdata('type') == 'user' && $this->data['user_settings']) {
+                if ($this->data['user_settings']['message_on_inquiry']) {
                     $where = 'user_id = ' . $this->db->escape($user_id) . ' AND template_for = "inquiry_template"';
                     $inquiry_template_arr = $this->CMS_model->get_result(tbl_default_templates, $where, null, 1);
 
@@ -247,6 +248,7 @@ class Users extends CI_Controller {
             $where .= ' AND id != ' . $this->db->escape($setting_id);
         }
         $check_phone_number_id = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1);
+
         if (!empty($check_phone_number_id)) {
             $this->form_validation->set_message('unique_phone_id', 'Phone Number ID already Exists!');
             return FALSE;
@@ -270,18 +272,24 @@ class Users extends CI_Controller {
     }
 
     public function settings_save() {
+
         if ($this->input->post()) {
             $user_id = base64_decode($this->input->post('user_id'));
             $setting_id = base64_decode($this->input->post('setting_id'));
             $access_token = '';
             $permanent_access_token = '';
             $api_token = '';
-            $url = base_url() . 'users/settings';
+            if ($this->session->userdata('type') == 'admin') {
+                $url = base_url() . 'users/settings/' . base64_encode($user_id);
+            } else {
+                $url = base_url() . 'users/settings/';
+            }
+
+
             if (is_numeric($setting_id)) {
                 $id = base64_encode($user_id);
                 $where = 'id = ' . $this->db->escape($setting_id);
                 $user_settings = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1, null, 'id', 'desc');
-
                 if ($user_settings) {
                     $access_token = $user_settings['access_token'];
                     $permanent_access_token = $user_settings['permanent_access_token'];
@@ -289,27 +297,30 @@ class Users extends CI_Controller {
                 }
             }
 
-//            $unique_str = '';
-//            if ($access_token == "") {
-//                $unique_str = '|is_unique[' . tbl_user_settings . ' . access_token]';
-//            } else {
-//                if ($access_token != $this->input->post('access_token')) {
-//                    $unique_str = '|is_unique[' . tbl_user_settings . ' . access_token]';
-//                }
-//            }
-//            $this->form_validation->set_rules('access_token', 'Access Token', 'trim|required' . $unique_str, array('is_unique' => 'This %s already exists.'));
-//            $this->form_validation->set_rules('instance_id', 'Instance Id', 'trim|required');
-//            $this->form_validation->set_rules('trigger_time', 'Trigger Time', 'trim|required');
-            //$this->form_validation->set_rules('time_zone', 'Time Zone', 'trim|required');
-            $this->form_validation->set_rules('permanent_access_token', 'Permanent Access Token', 'trim|required|callback_unique_access_token[' . $setting_id . ']');
-            $this->form_validation->set_rules('phone_number_id', 'Phone Number ID', 'trim|required|callback_unique_phone_id[' . $setting_id . ']');
-            $this->form_validation->set_rules('business_account_id', 'Business Account ID', 'trim|required|callback_unique_business_id[' . $setting_id . ']');
-            $message_on_inquiry = $forward_inquiry_details = 0;
-            if (!empty($this->input->post('message_on_inquiry'))) {
-                $message_on_inquiry = 1;
-                $inquiry_template = $this->input->post('inquiry_template');
-                if (empty($inquiry_template)) {
-                    $this->form_validation->set_rules('inquiry_template', 'Inquiry template', 'trim|required');
+            $this->form_validation->set_rules('time_zone', 'Time Zone', 'trim|required');
+
+            if ($this->data['user_data']['waba_access'] == 1) {
+                $this->form_validation->set_rules('permanent_access_token', 'Permanent Access Token', 'trim|required');
+                $this->form_validation->set_rules('phone_number_id', 'Phone Number ID', 'trim|required|callback_unique_phone_id[' . $setting_id . ']');
+                $this->form_validation->set_rules('business_account_id', 'Business Account ID', 'trim|required|callback_unique_business_id[' . $setting_id . ']');
+            }
+            if ($this->session->userdata('type') == 'user') {
+                $message_on_inquiry = $forward_inquiry_details = 0;
+                if (!empty($this->input->post('message_on_inquiry'))) {
+                    $message_on_inquiry = 1;
+                    $inquiry_template = $this->input->post('inquiry_template');
+                    if (empty($inquiry_template)) {
+                        $this->form_validation->set_rules('inquiry_template', 'Inquiry template', 'trim|required');
+                    }
+                }
+
+                $forward_text = 0;
+                if (!empty($this->input->post('forward_text'))) {
+                    $forward_text = 1;
+                    $forward_to = $this->input->post('forward_to');
+                    if (empty($forward_to)) {
+                        $this->form_validation->set_rules('forward_to', 'Whatsapp No', 'trim|required');
+                    }
                 }
             }
 
@@ -317,12 +328,25 @@ class Users extends CI_Controller {
                 $this->session->set_flashdata('error_msg', validation_errors());
                 redirect($url);
             } else {
-                //$time_zone = $this->input->post('time_zone');
-                //!empty($time_zone) ? $this->session->set_userdata('time_zone', $time_zone) : '';
+                $group_ids_json = $this->input->post('group_ids');
+                $tags = [];
+                if (!empty($group_ids_json)) {
+                    $arr_group_id = json_decode($group_ids_json, true);
+                    if (!empty($arr_group_id)) {
+                        foreach ($arr_group_id as $key => $rt) {
+                            $tags[$key] = trim($rt['name']);
+                        }
+                    }
+                }
                 
+                
+                
+                
+                $time_zone = $this->input->post('time_zone');
+
                 $where = array('id' => $setting_id);
                 $update_array = [
-                    //'time_zone' => $time_zone,
+                    'app_id' => $this->input->post('app_id'),
                     'access_token' => $this->input->post('access_token'),
                     'instance_id' => $this->input->post('instance_id'),
                     'permanent_access_token' => $this->input->post('permanent_access_token'),
@@ -334,12 +358,22 @@ class Users extends CI_Controller {
                     'tradeindia_key' => ($this->input->post('tradeindia_key') != '') ? $this->input->post('tradeindia_key') : '',
                     'exportersindia_key' => ($this->input->post('exportersindia_key') != '') ? $this->input->post('exportersindia_key') : '',
                     'exportersindia_email' => ($this->input->post('exportersindia_email') != '') ? $this->input->post('exportersindia_email') : '',
-                    'message_on_inquiry' => $message_on_inquiry,
-                    'forward_inquiry' => !empty($this->input->post('forward_inquiry')) ? 1 : 0,
-                    'user_id' => $user_id
+                    'user_id' => $user_id,
+                    'default_tags' => !empty($tags) ? implode(',', $tags) : '',
                 ];
+
+                if ($this->session->userdata('type') == 'user') {
+                    $update_array['message_on_inquiry'] = $message_on_inquiry;
+                    $update_array['forward_inquiry'] = !empty($this->input->post('forward_inquiry')) ? 1 : 0;
+                    $update_array['forward_text'] = $forward_text;
+                    $update_array['forward_to'] = !empty($this->input->post('forward_to')) ? $this->input->post('forward_to') : '';
+                }
                 if (empty($api_token)) {
                     $update_array['api_token'] = generate_api_key();
+                }
+                if (!empty($time_zone)) {
+                    $update_array['time_zone'] = $time_zone;
+                    $this->session->set_userdata('time_zone', $time_zone);
                 }
                 if (is_numeric($setting_id)) {
                     $this->CMS_model->update_record(tbl_user_settings, $where, $update_array);
@@ -349,7 +383,6 @@ class Users extends CI_Controller {
                             'template_for' => 'inquiry_template',
                             'template_id' => $inquiry_template,
                         );
-
 
                         $dwhere = 'user_id = ' . $user_id . ' AND template_for = "inquiry_template"';
                         $inquiry_temp = $this->CMS_model->get_result(tbl_default_templates, $dwhere, null, 1);
@@ -382,7 +415,6 @@ class Users extends CI_Controller {
                         $inquiry_temp_data['template_values'] = !empty($template_values) ? json_encode($template_values) : '';
                         $inquiry_temp_data['template_media'] = !empty($temp_media_array) ? json_encode($temp_media_array) : '';
 
-
                         //pr($inquiry_temp_data, 1);
                         if (empty($inquiry_temp)) {
                             $inquiry_temp_data['user_id'] = $user_id;
@@ -411,18 +443,18 @@ class Users extends CI_Controller {
         if (is_numeric($user_id)) {
             $inquiry_logs = $this->Indiamart_inquiries_model->get_indiamart_inquiries_logs($user_id);
             if (isset($inquiry_logs) && !empty($inquiry_logs)) {
-//                $fileName = 'leads_' . date('YmdHis') . '.xlsx';
-//
-//                $object = new PHPExcel();
-//                $object->setActiveSheetIndex(0);
-//                $table_columns = array("Query ID", "Query Type", "Query Time", "Name", "Mobile", "Alternative Mobile", "Phone", "Alternative Phone", "Email", "Alternative Email", "Subject", "Company", "Address", "City", "State", "Pincode", "Country", "Product Name", "Mcat Name", "Call Duration", "Message", "Receiver Mobile");
-//
-//                $column = 0;
-//                foreach ($table_columns as $field) {
-//                    $object->getActiveSheet()->setCellValueByColumnAndRow($column, 1, $field);
-//                    $column++;
-//                }
-//                $excel_row = 2;
+                //                $fileName = 'leads_' . date('YmdHis') . '.xlsx';
+                //
+                //                $object = new PHPExcel();
+                //                $object->setActiveSheetIndex(0);
+                //                $table_columns = array("Query ID", "Query Type", "Query Time", "Name", "Mobile", "Alternative Mobile", "Phone", "Alternative Phone", "Email", "Alternative Email", "Subject", "Company", "Address", "City", "State", "Pincode", "Country", "Product Name", "Mcat Name", "Call Duration", "Message", "Receiver Mobile");
+                //
+                //                $column = 0;
+                //                foreach ($table_columns as $field) {
+                //                    $object->getActiveSheet()->setCellValueByColumnAndRow($column, 1, $field);
+                //                    $column++;
+                //                }
+                //                $excel_row = 2;
                 foreach ($inquiry_logs as $inquiry_log) {
                     $response_array = isset($inquiry_log['response']) && !empty($inquiry_log['response']) ? json_decode($inquiry_log['response']) : array();
                     if (isset($response_array) && !empty($response_array)) {
@@ -460,30 +492,30 @@ class Users extends CI_Controller {
                                 $this->CMS_model->insert_data(tbl_indiamart_customer_leads, $insert_array);
                             } else {
                                 echo 'exist : ' . $indiamart_customer_lead['query_id'];
-//                                $this->CMS_model->update_record(tbl_indiamart_customer_leads, array('id' => $indiamart_customer_lead['id']), $insert_array);
+                                //                                $this->CMS_model->update_record(tbl_indiamart_customer_leads, array('id' => $indiamart_customer_lead['id']), $insert_array);
                             }
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(0, $excel_row, $response['UNIQUE_QUERY_ID']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(1, $excel_row, $response['QUERY_TYPE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(2, $excel_row, $response['QUERY_TIME']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(3, $excel_row, $response['SENDER_NAME']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(4, $excel_row, $response['SENDER_MOBILE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(5, $excel_row, $response['SENDER_MOBILE_ALT']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(6, $excel_row, $response['SENDER_PHONE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(7, $excel_row, $response['SENDER_PHONE_ALT']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(8, $excel_row, $response['SENDER_EMAIL']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(9, $excel_row, $response['SENDER_EMAIL_ALT']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(10, $excel_row, $response['SUBJECT']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(11, $excel_row, $response['SENDER_COMPANY']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(12, $excel_row, $response['SENDER_ADDRESS']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(13, $excel_row, $response['SENDER_CITY']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(14, $excel_row, $response['SENDER_STATE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(15, $excel_row, $response['SENDER_PINCODE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(16, $excel_row, $response['SENDER_COUNTRY_ISO']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(17, $excel_row, $response['QUERY_PRODUCT_NAME']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(18, $excel_row, $response['QUERY_MCAT_NAME']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(19, $excel_row, $response['CALL_DURATION']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(20, $excel_row, $response['QUERY_MESSAGE']);
-//                            $object->getActiveSheet()->setCellValueByColumnAndRow(21, $excel_row, $response['RECEIVER_MOBILE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(0, $excel_row, $response['UNIQUE_QUERY_ID']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(1, $excel_row, $response['QUERY_TYPE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(2, $excel_row, $response['QUERY_TIME']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(3, $excel_row, $response['SENDER_NAME']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(4, $excel_row, $response['SENDER_MOBILE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(5, $excel_row, $response['SENDER_MOBILE_ALT']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(6, $excel_row, $response['SENDER_PHONE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(7, $excel_row, $response['SENDER_PHONE_ALT']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(8, $excel_row, $response['SENDER_EMAIL']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(9, $excel_row, $response['SENDER_EMAIL_ALT']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(10, $excel_row, $response['SUBJECT']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(11, $excel_row, $response['SENDER_COMPANY']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(12, $excel_row, $response['SENDER_ADDRESS']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(13, $excel_row, $response['SENDER_CITY']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(14, $excel_row, $response['SENDER_STATE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(15, $excel_row, $response['SENDER_PINCODE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(16, $excel_row, $response['SENDER_COUNTRY_ISO']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(17, $excel_row, $response['QUERY_PRODUCT_NAME']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(18, $excel_row, $response['QUERY_MCAT_NAME']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(19, $excel_row, $response['CALL_DURATION']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(20, $excel_row, $response['QUERY_MESSAGE']);
+                            //                            $object->getActiveSheet()->setCellValueByColumnAndRow(21, $excel_row, $response['RECEIVER_MOBILE']);
                         }
                     }
                 }

@@ -39,8 +39,8 @@
                                             if (is_array($automation_detail)) {
                                                 $image = base_url() . DEFAULT_IMAGE_UPLOAD_PATH . 'message.png';
                                                 $title = $automation_detail['name'];
-        //                                            $description = $automation_detail['description'];
-                                                $description = '';
+                                                //                                            $description = $automation_detail['description'];
+                                                /*$description = '';
                                                 if (isset($automation_datas) && !empty($automation_datas)) {
                                                     $template_media = isset($automation_datas['template_media']) ? (array) json_decode($automation_datas['template_media']) : array();
                                                     if (isset($template_media) && !empty($template_media)) {
@@ -54,7 +54,7 @@
                                                             }
                                                         }
                                                     }
-                                                }
+                                                }*/
                                             } else {
                                                 $image = base_url() . DEFAULT_IMAGE_UPLOAD_PATH . 'delay.png';
                                                 $title = 'Wait for';
@@ -64,16 +64,15 @@
                                                 ?> 
                                                 <div class="cd-timeline-block">
                                                     <div class="cd-timeline-img">
-                                                        <img src="<?php echo $image
-                                                ?>" class="img_circle" alt="Avatar-1">
+                                                        <img src="<?php echo $image ?>" class="img_circle" alt="Avatar-1">
                                                     </div>
-    
+
                                                     <div class="cd-timeline-content bg-danger">
                                                         <h2 class="mb-4"><?php echo $title ?></h2>
                                                         <p class="mb-4"><?php echo $description ?></p>
                                                     </div>
                                                 </div>
-    
+
                                                 <?php
                                             } else {
                                                 ?>
@@ -81,7 +80,7 @@
                                                     <div class="cd-timeline-img">
                                                         <img src="<?php echo $image ?>" class="img_circle" alt="Avatar-2">
                                                     </div>
-    
+
                                                     <div class="cd-timeline-content bg-primary">
                                                         <h2 class="mb-4"><?php echo $title ?></h2>
                                                         <p class="mb-4"><?php echo $description ?></p>
@@ -90,7 +89,7 @@
                                                 </div>
                                                 <?php
                                             }
-                                         }
+                                        }
                                     }
                                     ?>
                                 </section>

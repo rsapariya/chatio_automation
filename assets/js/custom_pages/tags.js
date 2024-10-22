@@ -39,8 +39,8 @@ var tags_dttble = $('#tags_dttble').DataTable({
             render: function (data, type, full, meta) {
 
                 var action = '<td><ul class="table-controls">';
-                action += '<li><a href="javascript:void(0);" data-id="'+ btoa(full.id) +'" id="edit_tag" class="btn btn-outline-primary bs-tooltip"  data-bs-placement="top" data-bs-original-title="Edit"><i class="fa fa-pencil-alt p-1 br-6 mb-1"></i></a></li>';
-                action += '<li><a href="javascript:void(0);" onclick="is_assign(' + full.id + ')"  class="btn btn-outline-danger bs-tooltip"  data-bs-placement="top" data-bs-original-title="Delete"><i class="fa fa-trash p-1 br-6 mb-1"></i></a></li>';
+                action += '<li><a href="javascript:void(0);" data-id="'+ btoa(full.id) +'" id="edit_tag" class="btn btn-outline-primary bs-tooltip p-1"  data-bs-placement="top" data-bs-original-title="Edit"><i class="fa fa-pencil-alt p-1 br-6 mb-1"></i></a></li>';
+                action += '<li><a href="javascript:void(0);" onclick="is_assign(' + full.id + ')"  class="btn btn-outline-danger bs-tooltip p-1"  data-bs-placement="top" data-bs-original-title="Delete"><i class="fa fa-trash p-1 br-6 mb-1"></i></a></li>';
                 action += '</ul></td>';
                 return action;
             }
@@ -108,19 +108,83 @@ function is_assign(id){
     });
 }
 function delete_tag(status, id) {
-    var msg = status == true ? "This tag is assigned to client. You won't be able to revert this Tag!" : "You won't be able to revert this Tag!";
+    let swalHTML = '';
+    if(status === true){
+        swalHTML += `<p class="mb-2">This tag is assigned to contacts. You won't be able to revert this Tag!<p>
+                <div class="text-start p-3 bg-light-info"><small class="mt-2 mb-1 text-danger">select any option!</small><br/><label><input type="radio" name="remove_contact" value="tag" /> Delete tag only. </label><br>
+                <label><input type="radio" name="remove_contact" value="contact" /> Delete all contacts with this tag also.</label></div>
+                <p clas="mt-2"><b>Note:</b> Some contacts may have multiple tags.</P>`;
+    
+    }else{
+        swalHTML += `<p class="mb-0">You won't be able to revert this Tag!<p>`;
+    }
     new swal({
         title: "Are you sure?",
-        text: msg,
+        html: swalHTML,
         padding: '2em',
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Yes, delete it!",
         cancelButtonText: "No, cancel plz!",
         cancelButtonColor: '#d33',
+        didOpen: function () {
+            if (status === true) {
+                document.querySelector('.swal2-confirm').setAttribute('disabled', 'true');
+                document.querySelectorAll('input[name="remove_contact"]').forEach(input => {
+                    input.addEventListener('change', function () {
+                        document.querySelector('.swal2-confirm').removeAttribute('disabled');
+                    });
+                });
+            }
+        }
     }).then(function (result) {
         if (result.value) {
-            window.location.href = base_url + "tag/action/delete/" + id;
+            let data;
+            if(status === true){
+                const selectedOption = document.querySelector('input[name="remove_contact"]:checked');
+                if (selectedOption.value === 'contact') {
+                    data = {'id': id, 'delete': 'contact'};
+                } else {
+                    data = {'id': id, 'delete': 'tag'};
+                }
+            }else{
+                data = {'id': id, 'delete': 'tag'};
+            }
+            if(data){
+                jQuery.ajax({
+                    type: "POST",
+                    url: base_url + "tag/delete_tag",
+                    data: data,
+                    success: function (response) {
+                        var json = JSON.parse(response);
+                        if (!json.status) {
+                            swal.fire({
+                                title: "Error!",
+                                text: json.error,
+                                icon: "error",
+                                confirmButtonText: "Ok"
+                            }).then(function() {
+                                setTimeout(function() {
+                                    Swal.close();
+                                }, 2000);
+                            });
+                        } else {
+                            tags_dttble.ajax.reload(null, false);
+                            swal.fire({
+                                title: "Success!",
+                                text: json.success,
+                                icon: "successs",
+                                confirmButtonText: "Ok"
+                            }).then(function() {
+                                setTimeout(function() {
+                                    Swal.close();
+                                }, 2000);
+                            });
+                        }
+                        
+                    }
+                });
+            }
         }
-    })
+    });
 }

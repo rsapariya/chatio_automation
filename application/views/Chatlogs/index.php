@@ -63,4 +63,5 @@
         </div>
     </div>
 </div>
-<script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/chat_logs.js"></script>
+
+<script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/chat_logs.js?t=<?php echo date('YmdHis') ?>"></script>

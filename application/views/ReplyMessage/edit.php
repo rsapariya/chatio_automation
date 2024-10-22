@@ -40,6 +40,13 @@
                                             <div class="invalid-feedback">Please fill the trigger text</div>
                                         </div> 
                                     </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="form-group">
+                                            <label for="hReplyText">Trigger on</label><br/>
+                                            <label class="mr-3"><input type="radio"  name="trigger_on" value="match" <?php echo isset($reply_message_datas['trigger_on']) && $reply_message_datas['trigger_on'] == 'match' ? 'checked="checked"' : '' ?> /> If full keyword match</label>
+                                            <label><input type="radio" name="trigger_on" value="contains" <?php echo isset($reply_message_datas['trigger_on']) && $reply_message_datas['trigger_on'] == 'contains' ? 'checked="checked"' : '' ?> /> If message contains the keyword</label>
+                                        </div> 
+                                    </div>
                                     <div class="col-12 mt-2 reply_message_attachment_details">
                                         <?php
                                         $attachments_details = array();
@@ -127,7 +134,7 @@
                                                             '<input type="hidden" target="_blank" name="existing_attachments[' . $key . ']" value="' . $detail . '"/>';
                                                     $attachments_html .= '</div>';
                                                     $attachments_html .= '<div class="col-12">';
-                                                    $attachments_html .= '<input type="text" class="form-control" id="attachment_caption'.$key.'" name="attachment_caption['.$key.']" value="'.$caption.'" placeholder="enter caption for attachment" maxlength="1000"  />';
+                                                    $attachments_html .= '<textarea class="form-control" id="attachment_caption'.$key.'" name="attachment_caption['.$key.']" placeholder="enter caption for attachment" maxlength="1000">'.$caption.'</textarea>';
                                                     $attachments_html .= '</div>';
                                                 }
                                                 $attachments_html .= '</div>' .

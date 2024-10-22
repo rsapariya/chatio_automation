@@ -21,7 +21,7 @@ class Tags_model extends CI_Model {
             $this->db->having('t.tag LIKE "%' . $keyword['value'] . '%"', NULL);
         }
         $order = $this->input->get('order');
-        if(!empty($order)){
+        if (!empty($order)) {
             $this->db->order_by($columns[$this->input->get('order')[0]['column']], $this->input->get('order')[0]['dir']);
         }
         if (is_null($count)):
@@ -32,5 +32,21 @@ class Tags_model extends CI_Model {
         endif;
         return $res_data;
     }
-    
+
+    public function is_contain_contacts($user_id, $tag, $return = '') {
+        $this->db->select('id');
+        $this->db->from(tbl_clients);
+        $this->db->where('user_id', $user_id);
+        $this->db->where("FIND_IN_SET('$tag', group_ids) != 0");
+        $query = $this->db->get();
+        if(empty($return)){
+            if ($query->num_rows() > 0) {
+                return true;
+            }
+        }else if($return == 'data'){
+            return $query->result_array();
+        }
+        
+        return false;
+    }
 }

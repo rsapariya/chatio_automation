@@ -6,32 +6,45 @@ class Dashboard extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->load->model(['Admin_model', 'User_model', 'CMS_model']);
+        $this->load->model(['Admin_model', 'User_model', 'CMS_model', 'Chatlogs_model']);
         $this->data = get_admin_data();
     }
 
     public function index() {
         $this->template->set('title', 'Dashboard');
-        $where = array('is_deleted' => '0');
-        $where_tem = array('is_deleted' => '0');
+
+        if ($this->session->userdata('type') == 'user') {
+            $user_id = $this->session->userdata('id');
+        }
+        if ($this->session->userdata('type') == 'member') {
+            $user_id = $this->session->userdata('added_by');
+        }
+
         if ($this->data['user_data']['type'] == 'admin') {
-            $where_tem['user_id'] = 0;
-        } elseif ($this->data['user_data']['type'] == 'user') {
-            $where_tem['user_id'] = $where['user_id'] = $this->data['user_data']['id'];
-        }
-         if ($this->data['user_data']['type'] == 'admin') {
-            $users = $this->CMS_model->get_result(tbl_users, $where);
-        }else{
+            $users = $this->CMS_model->get_result(tbl_users, array('is_deleted' => '0'));
+        } else {
+            $where = array('is_deleted' => '0', 'user_id' => $user_id);
+
             $users = $this->CMS_model->get_result(tbl_clients, $where);
+            $templates = $this->CMS_model->get_result(tbl_templates, $where);
+            $this->data['templates_cnt'] = count($templates);
+
+            $unsread_message = $this->Chatlogs_model->get_unread_messages_count();
+            //echo $this->db->last_query(); exit();
+            $this->data['unread_message'] = !empty($unsread_message) && !empty($unsread_message['unread_message']) ? $unsread_message['unread_message'] : 0;
         }
-        $templates = $this->CMS_model->get_result(tbl_templates, $where_tem);
+
         $this->data['users_cnt'] = count($users);
-        $this->data['templates_cnt'] = count($templates);
         $this->template->load('default_home', 'Dashboard/dashboard', $this->data);
     }
 
     public function edit() {
         $this->template->set('title', 'Edit Profile');
+        $account_details = getMetaAccountDetails();
+        $this->data['account_details'] = !empty($account_details) && !isset($account_details['error']) ? $account_details : '';
+        $phone_details = getMetaPhoneDetails();
+        $this->data['phone_details'] = !empty($phone_details) && !isset($phone_details['error']) ? $phone_details['data'] : '';
+
         $this->template->load('default_home', 'Dashboard/profile_edit', $this->data);
     }
 
@@ -84,6 +97,105 @@ class Dashboard extends CI_Controller {
                     $this->session->set_flashdata('success_msg', 'User updated successfully !');
                 }
                 redirect($url);
+            }
+        }
+    }
+
+    public function upload_file() {
+        $filename = $this->input->post('filename');
+        $dynamic_text = $this->input->post('dynamic_text');
+
+        if (!empty($_FILES) && !empty($filename)) {
+            $url = upload_file_on_server($_FILES, $filename);
+            if (!empty($url)) {
+                if (!empty($dynamic_text)) {
+                    $response = image_watermark($url, $dynamic_text);
+                } else {
+                    $response = array('status' => true, 'url' => $url, 'watermark_url' => $url);
+                }
+            } else {
+                $response = array('status' => false);
+            }
+        } else {
+            $response = array('status' => false);
+        }
+        echo json_encode($response);
+        exit();
+    }
+
+    public function image_watermark() {
+        $text = $this->input->post('text');
+        $url = $this->input->post('url');
+        if (!empty($text) && !empty($url)) {
+            $response = image_watermark($url, $text);
+            echo json_encode($response);
+            exit();
+        }
+    }
+
+    public function check_drawflow() {
+        $this->load->view('Dashboard/drawflow');
+    }
+
+    public function save_drawflow_data() {
+        $drawflow = $this->input->post('drawflow');
+        if (isset($drawflow['Home'])) {
+            $data = $drawflow['Home']['data'];
+            $json = json_encode($data);
+            $update_array['user_id'] = $this->session->userdata('id');
+            $update_array['data'] = $json;
+            $id = $this->CMS_model->insert_data('chatboat', $update_array);
+            if (!empty($id)) {
+                $name = 'df' . $id;
+                $this->CMS_model->update_record('chatboat', array('id' => $id), array('name' => $name));
+            }
+        }
+        redirect('dashboard/check_drawflow');
+    }
+
+    public function generate_drawflow_data_flow() {
+        $check_drawflow = $this->CMS_model->get_result('chatboat', array('flow_generated' => 0));
+        if (isset($check_drawflow) && !empty($check_drawflow)) {
+            foreach ($check_drawflow as $drawflow) {
+                $user_id = $drawflow['user_id'];
+                $chatboat_id = $drawflow['id'];
+                $json_datas = isset($drawflow['data']) && !empty($drawflow['data']) ? json_decode($drawflow['data'], true) : array();
+                $send_data = array();
+                if (isset($json_datas) && !empty($json_datas)) {
+                    $i = 1;
+                    foreach ($json_datas as $key => $json_data) {
+                        if ($json_data['name'] == 'Send Media') {
+                            $send_data[] = array(
+                                'chatboat_order' => $i,
+                                'user_id' => $user_id,
+                                'chatboat_id' => $chatboat_id,
+                                'type' => 'media',
+                                'value' => $json_data['data']['name']
+                            );
+                        } elseif ($json_data['name'] == 'Text') {
+                            $send_data[] = array(
+                                'chatboat_order' => $i,
+                                'user_id' => $user_id,
+                                'chatboat_id' => $chatboat_id,
+                                'type' => 'text',
+                                'value' => $json_data['data']['name']
+                            );
+                        } elseif ($json_data['name'] == 'templates') {
+                            $send_data[] = array(
+                                'chatboat_order' => $i,
+                                'user_id' => $user_id,
+                                'chatboat_id' => $chatboat_id,
+                                'type' => 'template',
+                                'value' => $json_data['data']['channel']
+                            );
+                        }
+                        $i++;
+                    }
+                    if (isset($send_data) && !empty($send_data)) {
+                        $this->db->insert_batch('chatboat_datas', $send_data);
+                        $this->CMS_model->update_record('chatboat', array('id', $chatboat_id), array('flow_generated' => 1));
+                    }
+                }
             }
         }
     }

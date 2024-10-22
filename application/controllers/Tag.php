@@ -81,28 +81,70 @@ class Tag extends CI_Controller {
     }
 
     function is_assign() {
-        $user_id = $this->data['user_data']['id'];
+        if ($this->session->userdata('type') == 'user') {
+            $user_id = $this->session->userdata('id');
+        }
+        if ($this->session->userdata('type') == 'member') {
+            $user_id = $this->session->userdata('added_by');
+        }
         $id = $this->input->post('id');
 
         $where = 'id = ' . $this->db->escape($id);
         $tagArr = $this->CMS_model->get_result(tbl_tags, $where, '', 1);
-        
+
         if (!empty($tagArr)) {
             $tag = $tagArr['tag'];
-            $Cwhere = 'user_id = ' . $user_id . ' AND is_deleted != 1';
-            $client = $this->CMS_model->get_result(tbl_clients, $Cwhere, 'group_ids');
-            if(!empty($client)){
-                foreach($client as $c){
-                    $tags = explode(',', $c['group_ids']);
-                    if(in_array($tag, $tags)){
-                        echo json_encode(array('status' => true));
-                        exit();
-                    }
-                }
+
+            $is_contain = $this->Tags_model->is_contain_contacts($user_id, $tag);
+            if (!empty($is_contain)) {
+                echo json_encode(array('status' => true));
+                exit();
             }
+            /* $Cwhere = 'user_id = ' . $user_id . ' AND is_deleted != 1';
+              $client = $this->CMS_model->get_result(tbl_clients, $Cwhere, 'group_ids');
+              if(!empty($client)){
+              foreach($client as $c){
+              $tags = explode(',', $c['group_ids']);
+              if(in_array($tag, $tags)){
+              echo json_encode(array('status' => true));
+              exit();
+              }
+              }
+              } */
         }
         echo json_encode(array('status' => false));
         exit();
+    }
+    
+    
+    public function delete_tag(){
+        if ($this->session->userdata('type') == 'user') {
+            $user_id = $this->session->userdata('id');
+        }
+        if ($this->session->userdata('type') == 'member') {
+            $user_id = $this->session->userdata('added_by');
+        }
+        $tag_id = $this->input->post('id');
+        $delete_opt = $this->input->post('delete');
+        
+        $tag_exist = $this->db->get_where(tbl_tags, array('id' => $tag_id))->row_array();
+        if(!empty($tag_exist)){
+            $this->CMS_model->delete_data(tbl_tags, ' id ='.$tag_id);
+            if($delete_opt =='contact'){
+                $conatcts_arr = $this->Tags_model->is_contain_contacts($user_id, $tag_exist['tag'], 'data');
+                if(!empty($conatcts_arr)){
+                    $ids = array_column($conatcts_arr, 'id');
+                    $this->CMS_model->delete_multiple('id',$ids, tbl_clients);
+                    echo json_encode(array('status' => true, 'success'  => 'Tag and contacts has been deleted successfully!'));
+                    exit();
+                }  
+            }
+            echo json_encode(array('status' => true, 'success'  => 'Tag has been deleted successfully!'));
+            exit();
+        }else{
+            echo json_encode(array('status' => false, 'error'  => 'something went wrong!'));
+            exit();
+        }
     }
 
     public function action($action, $id) {

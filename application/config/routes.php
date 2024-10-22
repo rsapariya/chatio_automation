@@ -70,6 +70,7 @@ $route['contacts/add_multiple'] = 'clients/add_multiple';
 $route['contacts/edit/(:any)'] = 'Clients/edit/$1';
 $route['contacts/action/delete/(:any)'] = 'Clients/action/delete/$1';
 
+
 $route['(:any)/add'] = '$1/edit';
 $route['(:any)/add_custom'] = '$1/edit_custom';
 $route['(:any)/(:any)'] = "$1/$2";
@@ -78,11 +79,16 @@ $route['(:any)/delete/(:any)'] = '$1/action/delete/$2';
 $route['(:any)/activate/(:any)'] = '$1/action/activate/$2';
 $route['(:any)/block/(:any)'] = '$1/action/block/$2';
 $route['(:any)/(:any)/(:any)'] = "$1/$2/$3";
+
 $route['text-logs'] = 'ChatLogs/index';
+$route['api-logs'] = 'ChatLogs/api_log';
 $route['live-chat'] = 'ChatLogs/chat_live';
 $route['crm-leads'] = 'indiamart_leads/index';
 $route['crm-message-logs'] = 'indiamart_leads/message_logs';
 $route['api-docs'] = 'api/docs';
+
+$route['campaigns'] = 'Campaigns';
+$route['new-campaign'] = 'Campaigns/new_campaign';
 
 
 

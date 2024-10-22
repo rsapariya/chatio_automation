@@ -55,16 +55,85 @@ var automations_dttble = $('#automations_dttble').DataTable({
             sortable: false,
             render: function (data, type, full, meta) {
                 var is_template_default = (full.is_default != undefined && full.is_default != null) ? parseInt(full.is_default) : 0;
-                var action = '<td><ul class="table-controls">';
-                action += '<li><a href="' + base_url + 'automations/view/' + btoa(full.id) + '" title="View" class="btn btn-outline-success"><i class="fa fa-eye"></i></a></li>';
-                action += '<li><a href="' + base_url + 'automations/edit/' + btoa(full.id) + '" title="Edit" class="btn btn-outline-primary"><i class="fa fa-pencil"></i></a></li>';
-                action += '<li><a href="javascript:void(0)" onclick="delete_automations(' + full.id + ')"  title="Delete" class="btn btn-outline-danger"><i class="fa fa-trash"></i></a></li>';
+                var action = '<td>';
+                action += '<ul class="table-controls">';
+                action += '<li><a href="' + base_url + 'automations/view/' + btoa(full.id) + '" class="btn btn-outline-success bs-tooltip p-1" data-bs-placement="top" data-bs-original-title="View"><i class="fa fa-eye p-1 br-6 mb-1"></i></a></li>';
+                action += '<li><a href="' + base_url + 'automations/edit/' + btoa(full.id) + '" class="btn btn-outline-primary bs-tooltip p-1" data-bs-placement="top" data-bs-original-title="Edit"><i class="fa fa-pencil p-1 br-6 mb-1"></i></a></li>';
+                action += '<li><a href="javascript:void(0)" onclick="delete_automations(' + full.id + ')"  title="Delete" class="btn btn-outline-danger bs-tooltip p-1" data-bs-placement="top" data-bs-original-title="Delete"><i class="fa fa-trash p-1 br-6 mb-1"></i></a></li>';
                 action += '</ul></td>';
                 return action;
             }
         }
     ], drawCallback: function () {
     }
+});
+
+var automation_logs_dttble = $('#automation_logs_dttble').DataTable({
+    processing: true,
+    serverSide: true,
+    "lengthMenu": [50, 100, 150, 200, 500],
+    "language": {
+        "paginate": {
+            "first": "<i class='fa fa-angles-left'></i>",
+            "previous": "<i class='fa fa-angle-left'></i>",
+            "next": "<i class='fa fa-angle-right'></i>",
+            "last": "<i class='fa fa-angles-right'></i>"
+        },
+        "info": "Showing page _PAGE_ of _PAGES_"
+    },
+    order: [[0, "desc"]],
+    ajax: {
+        'type': 'GET',
+        "url": base_url + 'automations/get_automation_logs',
+    },
+    columns: [
+        {
+            data: "sr_no",
+            visible: true,
+            searchable: false,
+            sortable: false
+        },
+        {
+            data: "name",
+            visible: true
+        },
+        {
+            data: "phone_number_full",
+            visible: true
+        },
+        {
+            data: "notification_date",
+            visible: true
+        },
+        {
+            data: "automation_name",
+            visible: true
+        },
+        {
+            data: "template_name",
+            visible: true
+        },
+        {
+            data: "message_status",
+            visible: true,
+            searchable: false,
+            sortable: false,
+            render: function (data, type, full, meta) {
+                let mStatus = '';
+                let messageStatus = full.message_status;
+                if(full.error_response !== null || messageStatus == 'failed'){
+                    mStatus +='<span class="badge badge-light-danger">FAILED</span>';
+                }else if(messageStatus == 'delivered' || messageStatus == 'read'){
+                    mStatus +='<span class="badge badge-light-success">'+messageStatus.toUpperCase()+'</span>';
+                }
+                return mStatus;
+            }
+        },
+        {
+            data: "sent_at",
+            visible: true
+        }
+    ]
 });
 
 $(document).find('.btn-add-automation').on('click', function (e) {
@@ -185,6 +254,7 @@ function add_change_event(seq) {
         get_template_details(temp_id, seq);
     });
 }
+
 $(document).find(".basic").map(function () {
     var template_id = $(this).attr('id');
     var seq = template_id.split("_")[1];
@@ -193,12 +263,12 @@ $(document).find(".basic").map(function () {
     }
 });
 
-
 function get_template_details(temp_id, seq) {
     jQuery.ajax({
         type: "POST",
         dataType: 'json',
-        url: base_url + 'templates/get_template_details/' + btoa(temp_id) + '/' + btoa(seq),
+        //url: base_url + 'templates/get_template_details/' + btoa(temp_id) + '/' + btoa(seq),
+        url: base_url + 'clients/get_single_template_preview/' + btoa(temp_id) + '/' + btoa(seq),
         success: function (result) {
 //            console.log(result);
             $(document).find('#automation_template_div_' + seq).removeClass('hide');
@@ -264,10 +334,14 @@ $(document).find('.btn-add-delay').on('click', function (event) {
 $(".basic").select2({
     tags: true
 });
-flatpickr(document.getElementById('hTime'), {
-    enableTime: true,
-    noCalendar: true,   
-    dateFormat: "H:i",
-    defaultDate: new Date(),
-    minuteIncrement: 1
-});
+
+var hTime = document.getElementById('hTime');
+if(hTime){
+    flatpickr(hTime, {
+        enableTime: true,
+        noCalendar: true,   
+        dateFormat: "H:i",
+        //defaultDate: new Date(),
+        minuteIncrement: 1
+    });
+}

@@ -111,4 +111,15 @@ class Webhook extends CI_Controller {
         $this->whatsapp_app_cloud_api->sendTemplate($this->phone_number, 'hello_world', 'en_US');
     }
 
+    function send_api_response($message = 'Bret') {
+        $business_account_id = '104482029413792';
+        $res = get_json_api_data($message, $business_account_id);
+        pr($res);
+    }
+
+    function send_chatboat_response($message = 'Media') {
+        $business_account_id = '213697808496918';
+        $res = $this->ReplyMessage_model->get_trigger_chatboat_message($message, $business_account_id);
+    }
+
 }

@@ -1,6 +1,7 @@
 <?php
 
 defined('BASEPATH') OR exit('No direct script access allowed');
+
 use Netflie\WhatsAppCloudApi\WhatsAppCloudApi;
 use Netflie\WhatsAppCloudApi\Request;
 use Netflie\WhatsAppCloudApi\Response\ResponseException;
@@ -34,19 +35,35 @@ class Login extends CI_Controller {
 //                echo $this->encrypt->encode($password);
 //                die;
                 $user_detail = $this->Admin_model->get_user($email, $password);
-               
-
                 if (count($user_detail) == 1) {
                     $user = $user_detail[0];
-                    $profile_url = '';
-                    if($user['type'] == 'user'){
-                        $profile_url = $this->get_user_wa_profile($user['id']);
+                    if ($user['is_blocked'] != 1) {
+                        $login_update = array(
+                            'last_ip' => $_SERVER['REMOTE_ADDR'],
+                            'last_login' => date('Y-m-d H:i:s')
+                        );
+                        $this->CMS_model->update_record(tbl_users, array('id' => $user['id']), $login_update);
+
+                        $profile_url = '';
+                        if ($user['type'] == 'user') {
+                            $profile_url = $this->get_user_wa_profile($user['id']);
+                        }
+                        if ($user['type'] == 'member') {
+                            $userInfo = $this->CMS_model->get_result(tbl_users, array('id' => $user['added_by']), '', 1);
+                            $user['waba_access'] = !empty($userInfo) ? $userInfo['waba_access'] : $user['waba_access'];
+                            $time_zone = $this->CMS_model->get_result(tbl_user_settings, array('user_id' => $user['added_by']), '', 1);
+                            $user['time_zone'] = !empty($time_zone) ? $time_zone['time_zone'] : '';
+                        }
+                        
+                        $user['wa_profile_image_url'] = $profile_url;
+                        unset($user['password']);
+                        $session_array = $user;
+                        $this->session->set_userdata($session_array);
+                        redirect('dashboard', $this->data);
+                    } else {
+                        $this->session->set_flashdata('error_msg', 'Your account is blocked.');
+                        redirect('login');
                     }
-                    $user['wa_profile_image_url'] = $profile_url;
-                    unset($user['password']);
-                    $session_array = $user;
-                    $this->session->set_userdata($session_array);
-                    redirect('dashboard', $this->data);
                 } else {
                     $this->session->set_flashdata('error_msg', 'Invalid Login Crdentials.');
                     redirect('login');
@@ -121,35 +138,36 @@ class Login extends CI_Controller {
             $this->template->load('default_login', 'forgot_password', $this->data);
         }
     }
- 
-    public function get_user_wa_profile($user_id){
-      
-    $where = ' user_id = '.$user_id;
-    $user_settings = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1);
-    if(!empty($user_settings)){
-        $whatsapp_cloud_api = new WhatsAppCloudApi([
-            'from_phone_number_id' => $user_settings['phone_number_id'],
-            'access_token' => $user_settings['permanent_access_token'],
-        ]);
-        try {
-            $wa_response = $whatsapp_cloud_api->businessProfile('email,profile_picture_url,websites');
-            if (!empty($wa_response)) {
-                $Exresponse = new ResponseException($wa_response);
-                $responseData = $Exresponse->responseData();
-                if(!empty($responseData) && isset($responseData['data'])){
-                    if(!empty($responseData['data'])){
-                        if(isset($responseData['data'][0])){
-                            return isset($responseData['data'][0]['profile_picture_url']) && !empty($responseData['data'][0]['profile_picture_url']) ? $responseData['data'][0]['profile_picture_url'] : '';
+
+    public function get_user_wa_profile($user_id) {
+
+        $where = ' user_id = ' . $user_id;
+        $user_settings = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1);
+        if (!empty($user_settings)) {
+            $whatsapp_cloud_api = new WhatsAppCloudApi([
+                'from_phone_number_id' => $user_settings['phone_number_id'],
+                'access_token' => $user_settings['permanent_access_token'],
+            ]);
+            try {
+                $wa_response = $whatsapp_cloud_api->businessProfile('email,profile_picture_url,websites');
+                if (!empty($wa_response)) {
+                    $Exresponse = new ResponseException($wa_response);
+                    $responseData = $Exresponse->responseData();
+                    if (!empty($responseData) && isset($responseData['data'])) {
+                        if (!empty($responseData['data'])) {
+                            if (isset($responseData['data'][0])) {
+                                return isset($responseData['data'][0]['profile_picture_url']) && !empty($responseData['data'][0]['profile_picture_url']) ? $responseData['data'][0]['profile_picture_url'] : '';
+                            }
                         }
                     }
+                    return false;
                 }
-                return false;
+            } catch (\Netflie\WhatsAppCloudApi\Response\ResponseException $e) {
+                $responseData = $e->responseData();
             }
-        } catch (\Netflie\WhatsAppCloudApi\Response\ResponseException $e) {
-            $responseData = $e->responseData();
+            return false;
         }
         return false;
     }
-    return false;
-    }
+
 }

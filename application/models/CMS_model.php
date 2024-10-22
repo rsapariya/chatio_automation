@@ -36,13 +36,15 @@ class CMS_model extends CI_Model {
      * @param : @table 
      * @author : HPA
      */
-    public function get_result($table, $condition = null, $fields = null, $single = null, $total = null, $order_by = null, $sort = null) {
+    public function get_result($table, $condition = null, $fields = null, $single = null, $total = null, $order_by = null, $sort = 'ASC') {
         if (!empty($fields))
             $this->db->select($fields);
         else
             $this->db->select('*');
         if ($order_by != null) {
-            $this->db->order_by($order_by);
+            
+            $this->db->order_by($order_by, $sort);
+            
         }
         if (!is_null($condition)) {
             $this->db->where($condition);
@@ -164,7 +166,10 @@ class CMS_model extends CI_Model {
     }
 
     public function insert_batch($table, $data) {
-        return $this->db->insert_batch($table, $data);
+       // $data = $this->db->insert_batch($table, $data);
+        // print_r($data);
+        // die();
+         return $this->db->insert_batch($table, $data);
     }
 
     public function insert($table, $data) {
@@ -182,6 +187,15 @@ class CMS_model extends CI_Model {
     function delete_multiple($field, $data, $table){
         $this->db->where_in($field, $data);
         $this->db->delete($table);
+    }
+    
+    function get_user_timezone($user_id){
+        $this->db->select('time_zone');
+        $this->db->where('user_id',$user_id);
+        $data = $this->db->get(tbl_user_settings)->row_array();
+        
+        return $data;
+        
     }
 
 

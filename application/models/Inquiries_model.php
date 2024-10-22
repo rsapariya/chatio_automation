@@ -61,7 +61,7 @@ class Inquiries_model extends CI_Model {
     }
 
     public function getInquiryLogs($one_record = false) {
-        date_default_timezone_set("Asia/Calcutta");
+        //date_default_timezone_set("Asia/Calcutta");
         $date = date('Y-m-d H:i:s');
         $this->db->select('il.*,i.name as inquiry,i.inquiry_type,a.name as automation,t.name as template,t.temp_id,t.temp_category,t.temp_language,t.description,t.automation_image,i.phone_number_full', false);
         $this->db->where(['i.is_deleted' => 0, 'a.is_deleted' => 0, 'is_sent' => '0']);
@@ -71,7 +71,7 @@ class Inquiries_model extends CI_Model {
         $this->db->join(tbl_templates . ' t', 't.id=il.automation_template_id AND t.type = "automation"');
         $where = ' il.notification_date <= "' . $date . '"';
         $this->db->where($where);
-        $this->db->order_by('il.id', 'desc');
+        $this->db->order_by('il.id', 'ASC');
         if ($one_record) {
             $res_data = $this->db->get(tbl_inquiry_logs . ' il')->row_array();
         } else {

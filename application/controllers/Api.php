@@ -190,10 +190,10 @@ class Api extends CI_Controller {
             if (!empty($authentication)) {
                 $user_id = $authentication['user_id'];
                 $json_post = file_get_contents('php://input');
-
+                
                 if (!empty($json_post)) {
                     $url = $this->base_url . '/' . $authentication['phone_number_id'] . '/messages';
-                    $post = $temp_data = json_decode($json_post, true);
+                    $post= $temp_data = json_decode($json_post, 1);
                     $data = array(
                         "messaging_product" => "whatsapp",
                         "recipient_type" => "individual"
@@ -201,8 +201,8 @@ class Api extends CI_Controller {
                     $meta_data = json_encode(array_merge($data, $post));
 
                     !empty($post['to']) ? '' : $this->display_required_parameter_error('to');
-                    $type = isset($post['type']) && !empty($post['type']) ? 'api_'.$post['type'] : $this->display_required_parameter_error('type');
-                    
+                    $type = isset($post['type']) && !empty($post['type']) ? $post['type'] : $this->display_required_parameter_error('type');
+
                     /* if ($type == 'template') {
                       $template = $post['template'];
                       $template_name = isset($template['name']) && !empty($template['name']) ? $template['name'] : '';
@@ -215,7 +215,6 @@ class Api extends CI_Controller {
                      */
 
                     $response = (array) $this->callCurl($url, $authentication['permanent_access_token'], $meta_data);
-
                     if (isset($response['error']) && !empty($response['error'])) {
                         if ($response['error']->code == 190) {
                             $response['error']->code = 401;
@@ -228,18 +227,41 @@ class Api extends CI_Controller {
                     } else {
                         unset($temp_data['to']);
                         unset($temp_data['type']);
+                        $message = $media = $filename = '';
+                        if ($type == 'text') {
+                            $message = $temp_data['text']['body'];
+                        } else if ($type == 'image') {
+                            $message = $temp_data['image']['caption'];
+                            $media = $temp_data['image']['link'];
+                        } else if ($type == 'video') {
+                            $message = $temp_data['video']['caption'];
+                            $media = $temp_data['video']['link'];
+                        } else if ($type == 'audio') {
+                            $media = $temp_data['audio']['link'];
+                        } else if ($type == 'document') {
+                            $message = $temp_data['document']['caption'];
+                            $media = $temp_data['document']['link'];
+                            $filename = $temp_data['document']['filename'];
+                        } else {
+                            $message = json_encode($temp_data);
+                        }
+
+
                         $chat_log = array(
                             'user_id' => $user_id,
                             'from_user' => 0,
                             'phone_number' => str_replace('+', '', $post['to']),
                             'message_type' => $type,
                             'message_id' => $response['messages'][0]->id,
-                            'message' =>  json_encode($temp_data),
+                            'message' => $message,
+                            'media' => $media,
+                            'file_name' => $filename,
                             'created' => date('Y-m-d H:i:s'),
-                            'api_response' => json_encode($response)
+                            'api_response' => json_encode($response),
+                            'api_data' => json_encode($post)
                         );
-                        
-                        
+
+
                         $this->CMS_model->insert_data(tbl_chat_logs, $chat_log);
                         $return['success'] = array(
                             "message" => "Message accepted.",
@@ -276,6 +298,58 @@ class Api extends CI_Controller {
     public function docs() {
         $this->load->view('docs');
     }
-    
 
+    public function gd(){
+        $this->load->view('gd');
+    }
+    
+    public function modify_img(){
+        $uploadedFile = $_FILES['imageInput']['tmp_name'];
+        $img = imagecreatefromjpeg($uploadedFile);
+        
+        if ($img === false) {
+            echo json_encode(array('status' => false,'error' => 'image upload failed'));
+            exit;
+        }
+
+        $color = imagecolorallocate($img, 255, 0, 0);
+
+        $name = $this->input->post('text');
+        //$course = "Technologies";
+        $slno = 'REG-' . rand(100, 99999);
+        $issue_date = date('d-m-Y');
+        $font = "assets/fonts/Arial.ttf";
+
+        // Check if font file exists
+        if (!file_exists($font)) {
+            imagedestroy($img);
+            echo json_encode(array('status' => false,'error' => 'font not found'));
+            exit;
+        }
+
+        imagettftext($img, 24, 0, 50, 100, $color, $font, $name);
+        //imagettftext($img, 24, 0, 50, 200, $color, $font, $course);
+        imagettftext($img, 24, 0, 50, 300, $color, $font, $slno);
+        imagettftext($img, 24, 0, 50, 400, $color, $font, $issue_date);
+
+        $directory = 'upload/gd/';
+        if (!file_exists($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $new_name = time() . ".jpeg";
+        $filePath = $directory . $new_name;
+
+        // Save the modified image
+        if (imagejpeg($img, $filePath)) {
+            echo json_encode(array('status' => true,'url' => base_url().$filePath));
+            exit;
+        } else {
+            echo json_encode(array('status' => false,'error' => 'failed to save image'));
+            exit;
+        }
+
+        // Clean up
+        imagedestroy($img);
+    }
 }

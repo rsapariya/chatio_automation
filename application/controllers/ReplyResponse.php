@@ -40,8 +40,17 @@ class ReplyResponse extends CI_Controller {
         $final['recordsTotal'] = $this->ReplyResponse_model->get_all_reply_responses('count', $user_id);
         $final['redraw'] = 1;
         $final['recordsFiltered'] = $final['recordsTotal'];
-        $final['data'] = $this->ReplyResponse_model->get_all_reply_responses(null, $user_id);
-        $records = $final['data'];
+        $records = $this->ReplyResponse_model->get_all_reply_responses(null, $user_id);
+        if(!empty($records)){
+            foreach ($records as $rdk =>$rd){
+                $tz_date = '';
+                if(!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['created_at']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['created_at'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
+        }
         $final['data'] = $records;
         echo json_encode($final);
     }
@@ -57,7 +66,7 @@ class ReplyResponse extends CI_Controller {
         if ($this->data['user_data']['type'] == 'user') {
             $user_id = $this->data['user_data']['id'];
         }
-        $check_reply_message = $this->CMS_model->get_result(tbl_button_reply_logs, $where);
+        $check_reply_message = $this->CMS_model->get_result(tbl_chat_logs, $where);
         if ($check_reply_message) {
             if ($action == 'delete') {
                 $update_array = array(
@@ -65,7 +74,7 @@ class ReplyResponse extends CI_Controller {
                 );
                 $this->session->set_flashdata('success_msg', 'Reply Message successfully deleted!');
             }
-            $this->CMS_model->update_record(tbl_button_reply_logs, $where, $update_array);
+            $this->CMS_model->update_record(tbl_chat_logs, $where, $update_array);
         } else {
             $this->session->set_flashdata('error_msg', 'Invalid request. Please try again!');
         }
@@ -98,10 +107,10 @@ class ReplyResponse extends CI_Controller {
             $rows = 2;
             foreach ($check_reply_messages as $key => $val) {
                 $sheet->setCellValue('A' . $rows, ++$key);
-                $sheet->setCellValue('B' . $rows, $val['name']);
-                $sheet->setCellValue('C' . $rows, $val['mobile_number']);
+                $sheet->setCellValue('B' . $rows, $val['from_profile_name']);
+                $sheet->setCellValue('C' . $rows, $val['phone_number']);
                 $sheet->getStyle('C' . $rows)->getNumberFormat()->setFormatCode('000000000000');
-                $sheet->setCellValue('D' . $rows, $val['response']);
+                $sheet->setCellValue('D' . $rows, $val['message']);
                 $sheet->setCellValue('E' . $rows, $val['created_at']);
                 $rows++;
             }
@@ -126,7 +135,7 @@ class ReplyResponse extends CI_Controller {
 
         if(!empty($ids)){
             $id = implode(',',$ids);
-            $this->CMS_model->delete_multiple('id',json_decode($id),tbl_button_reply_logs);
+            $this->CMS_model->delete_multiple('id',json_decode($id),tbl_chat_logs);
             $response = array(
                 'status' => true,
             );

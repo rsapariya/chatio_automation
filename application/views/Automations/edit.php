@@ -25,8 +25,8 @@
                 </div> 
                 <div class=" widget-content-area">
                     <div class="row">
-                        <div class="col-xl-6 col-md-6 col-sm-6 col-12">
-                            <form method="post" action="<?php echo base_url() . 'automations/save' ?>" class="add_automation" novalidate enctype="multipart/form-data" >
+                        <div class="col-xl-6 col-md-12 col-sm-12 col-12">
+                            <form method="post" action="<?php echo base_url() . 'automations/save' ?>" class="add_automation" id="add_automation" novalidate enctype="multipart/form-data" >
                                 <input type="hidden" name='automation_id' value='<?php echo isset($automation_datas['id']) ? base64_encode($automation_datas['id']) : '' ?>'/>
                                 <input type="hidden" id='automation_templates' value='<?php echo isset($automation_templates) ? json_encode($automation_templates) : '' ?>'/>
                                 <div class="row">
@@ -41,7 +41,7 @@
                                     <div class="col-12 mt-2">
                                         <div class="form-group">
                                             <label for="hTime">Trigger Time</label>
-                                            <input id="hTime" name='trigger_time' value="<?php echo isset($automation_datas['trigger_time']) ? $automation_datas['trigger_time'] : '' ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Trigger Time">
+                                            <input id="hTime" name='trigger_time' value="<?php echo isset($automation_datas['trigger_time']) ? date('H:i',  strtotime(getTimeBaseOnTimeZone($automation_datas['trigger_time']))) : '' ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Trigger Time">
                                             <div class="valid-feedback"></div>
                                             <div class="invalid-feedback">Please fill the trigger time</div>
                                         </div> 
@@ -52,6 +52,7 @@
                                     if (isset($automation_datas['details']) && !empty($automation_datas['details'])) {
                                         $details = json_decode($automation_datas['details']);
                                     }
+                                    $selected_value = (!empty($automation_datas['selected_values'])) ? (array) json_decode($automation_datas['selected_values']) : array();
                                     $template_values = (!empty($automation_datas['template_values'])) ? (array) json_decode($automation_datas['template_values']) : array();
                                     $template_media = (!empty($automation_datas['template_media'])) ? (array) json_decode($automation_datas['template_media']) : array();
                                     $template_media_names = (!empty($automation_datas['template_media_names'])) ? (array) json_decode($automation_datas['template_media_names']) : array();
@@ -67,18 +68,30 @@
                                                     foreach ($automation_templates as $automation_template) {
                                                         $selected = ($automation_template['id'] == $detail) ? 'selected="selected"' : '';
                                                         $options .= '<option value="' . $automation_template['id'] . '" ' . $selected . '>' . $automation_template['name'] . '</option>';
+                                                        
                                                         if ($automation_template['id'] == $detail) {
                                                             $automation_media = array(
-                                                                'template_value' => isset($template_values[$key]) ? $template_values[$key] : array(),
-                                                                'template_media' => isset($template_media[$key]) ? $template_media[$key] : '',
+                                                                'selected_values' => isset($selected_value[$key]) ? json_encode($selected_value[$key]) : array(),
+                                                                'template_values' => isset($template_values[$key]) ? json_encode($template_values[$key]) : array(),
+                                                                'template_media' => isset($template_media[$key]) ? json_encode($template_media[$key]) : '',
                                                                 'template_media_name' => isset($template_media_names[$key]) ? $template_media_names[$key] : '',
                                                                 'template_button_url' => isset($template_button_url[$key]) ? $template_button_url[$key] : '',
                                                             );
-                                                            $temp_detail = get_template_details($automation_media, $automation_template['id'], $key, 'edit');
-
+                                                            
+                                                            $where = ' id=' . $automation_template['id'];
+                                                            $check_existing_template = $this->CMS_model->get_result(tbl_templates, $where, null, 1);
+                                                            $view_data['template_datas'] = $check_existing_template;
+                                                            
+                                                            $view_data['update_data'] = $automation_media;
+                                                            $view_data['seq'] = $key;
+                                                            
+                                                            //$temp_detail = get_template_details($automation_media, $automation_template['id'], $key, 'edit');
+                                                            $temp_detail = $this->load->view('Clients/single_template_preview', $view_data, TRUE);
+                                                            //pr($temp_detail, 1);
                                                             if (isset($temp_detail) && !empty($temp_detail)) {
-                                                                $temp_name = $temp_detail['name'];
-                                                                $temp_response = $temp_detail['response'];
+                                                                $temp_name = $automation_template['name'];
+                                                                //$temp_response = $temp_detail['response'];
+                                                                $temp_response = $temp_detail;
                                                             }
                                                         }
                                                     }

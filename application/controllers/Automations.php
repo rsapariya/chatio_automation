@@ -32,7 +32,26 @@ class Automations extends CI_Controller {
         $final['recordsTotal'] = $this->Automation_model->get_all_automations('count', $user_id);
         $final['redraw'] = 1;
         $final['recordsFiltered'] = $final['recordsTotal'];
-        $final['data'] = $this->Automation_model->get_all_automations(null, $user_id);
+        $records = $this->Automation_model->get_all_automations(null, $user_id);
+        if(!empty($records)){
+            foreach ($records as $rdk =>$rd){
+                $tz_trigger_time = '';
+                if(!empty($rd['trigger_time']) && $rd['trigger_time'] != '00:00:00'){
+                    $trigger_time = date('h:i a', strtotime($rd['trigger_time']));
+                    $tz_trigger_time = getTimeBaseOnTimeZone($trigger_time);
+                }
+                $records[$rdk]['trigger_time'] =  !empty($tz_trigger_time) ? date('h:i a', strtotime($tz_trigger_time)): '';
+                
+                
+                $tz_date = '';
+                if(!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['created_at']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['created_at'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
+        }
+        $final['data'] = $records;
         echo json_encode($final);
     }
 
@@ -47,7 +66,6 @@ class Automations extends CI_Controller {
         if (is_numeric($automation_id)) {
             $where = 'id = ' . $this->db->escape($automation_id);
             $check_automations = $this->CMS_model->get_result(tbl_automations, $where);
-            
             if ($check_automations) {
                 $this->data['automation_datas'] = $check_automations[0];
             } else {
@@ -59,7 +77,6 @@ class Automations extends CI_Controller {
             $user_id = $this->data['user_data']['id'];
         }
         $this->data['automation_templates'] = $this->Automation_model->get_automation_templates($user_id);
-        
         $this->template->load('default_home', 'Automations/edit', $this->data);
     }
 
@@ -136,6 +153,7 @@ class Automations extends CI_Controller {
     public function save() {
         $unique_str = '';
         if ($this->input->post()) {
+            //pr($this->input->post(), 1);
             $automation_id = base64_decode($this->input->post('automation_id'));
             $this->form_validation->set_rules('name', 'Name', 'trim|required|callback_automation_name_check');
             $this->form_validation->set_rules('trigger_time', 'Trigger Time', 'trim|required');
@@ -161,17 +179,19 @@ class Automations extends CI_Controller {
                     }
                 }
 
-                $where = array('id' => $automation_id);
+                $trigger_time = $this->input->post('trigger_time');
                 $update_array = [
                     'name' => $this->input->post('name'),
-                    'trigger_time' => date('H:i:s', strtotime($this->input->post('trigger_time'))),
+                    'trigger_time' => date('H:i:s', strtotime(getServerTimeZone($trigger_time))),
                 ];
+                
                 $templates = $this->input->post('templates');
                 $template_default_select_value = $this->input->post('default_select_value');
                 $template_default_value = $this->input->post('default_value');
                 $delay_count = $this->input->post('delay_count');
                 $delay_duration = $this->input->post('delay_duration');
                 $temp_media = $this->input->post('temp_media');
+                $card_media = $this->input->post('card_media');
 
                 $default_temp_media = $this->input->post('default_temp_media');
                 if (is_numeric($automation_id) && !empty($default_temp_media)) {
@@ -213,27 +233,49 @@ class Automations extends CI_Controller {
                     }
                 }
 
-                $template_values = array();
-                if (!empty($template_default_value)) {
+                $selected_values = !empty($template_default_select_value) ? $template_default_select_value : array();
+                /*if (!empty($template_default_select_value)) {
+                    foreach ($template_default_select_value as $keyV => $valueV) {
+                        if (!empty($valueV)) {
+                            foreach ($valueV as $keyS => $valueS) {
+                                if (!empty($valueS)) {
+                                    $selected_values[$keyV][$keyS] = $template_default_select_value[$keyV][$keyS];
+                                } else {
+                                     $selected_values[$keyV][$keyS] = '';
+                                }
+                            }
+                        } else {
+                            $selected_values[$keyV] = array();
+                        }
+                    }
+                }*/
+                
+                
+                $template_values = !empty($template_default_value) ? $template_default_value : array();
+                /*if (!empty($template_default_value)) {
                     foreach ($template_default_value as $keyV => $valueV) {
                         if (!empty($valueV)) {
                             foreach ($valueV as $keyS => $valueS) {
                                 if (!empty($valueS)) {
                                     $template_values[$keyV][$keyS] = $valueS;
                                 } else {
-                                    $template_values[$keyV][$keyS] = $template_default_select_value[$keyV][$keyS] . '_field';
+                                     $template_values[$keyV][$keyS] = '';
                                 }
                             }
                         } else {
                             $template_values[$keyV] = array();
                         }
                     }
-                }
-
+                }*/
+                
+                
+                
+                
                 if (!empty($delay_count)) {
                     foreach ($delay_count as $keyC => $count) {
                         $details[$keyC] = $count . ' ' . $delay_duration[$keyC];
                         $template_values[$keyC] = array();
+                        $selected_values[$keyC] = array();
                         $temp_media_array[$keyC] = '';
                         $temp_media_name_array[$keyC] = '';
                         $temp_btn_url_array[$keyC] = '';
@@ -244,6 +286,13 @@ class Automations extends CI_Controller {
                         $temp_media_array[$keyTM] = (!empty($temp_media_value)) ? $temp_media_value : '';
                     }
                 }
+                
+                if (isset($card_media) && !empty($card_media)) {
+                    foreach ($card_media as $keyTM => $cmvalue) {
+                        $temp_media_array[$keyTM] = (!empty($cmvalue)) ? $cmvalue : '';
+                    }
+                }
+                
 
                 if (isset($temp_btn_url) && !empty($temp_btn_url)) {
                     foreach ($temp_btn_url as $keyTBU => $temp_btn_url_val) {
@@ -325,6 +374,11 @@ class Automations extends CI_Controller {
                     ksort($details, 1);
                     $details = array_values($details);
 
+                    if (!empty($selected_values)) {
+                        ksort($selected_values, 1);
+                        $selected_values = array_values($selected_values);
+                    }
+                    
                     if (!empty($template_values)) {
                         ksort($template_values, 1);
                         $template_values = array_values($template_values);
@@ -351,6 +405,12 @@ class Automations extends CI_Controller {
                     }
                     $details = $new_details;
 
+                    $new_selected_values = array();
+                    foreach ($selected_values as $key => $selected_values) {
+                        $new_selected_values[++$key] = $selected_values;
+                    }
+                    $selected_values = $new_selected_values;
+                    
                     $new_template_values = array();
                     foreach ($template_values as $key => $template_value) {
                         $new_template_values[++$key] = $template_value;
@@ -377,11 +437,13 @@ class Automations extends CI_Controller {
                 }
 
                 $update_array['details'] = !empty($details) ? json_encode($details) : '';
+                $update_array['selected_values'] = !empty($selected_values) ? json_encode($selected_values) : '';
                 $update_array['template_values'] = !empty($template_values) ? json_encode($template_values) : '';
                 $update_array['template_media'] = !empty($temp_media_array) ? json_encode($temp_media_array) : '';
                 $update_array['template_media_names'] = !empty($temp_media_name_array) ? json_encode($temp_media_name_array) : '';
                 $update_array['template_button_url'] = !empty($temp_btn_url_array) ? json_encode($temp_btn_url_array) : '';
                 if (is_numeric($automation_id)) {
+                    $where = array('id' => $automation_id);
                     $this->CMS_model->update_record(tbl_automations, $where, $update_array);
                     $this->session->set_flashdata('success_msg', 'Automation updated successfully!');
                 } else {
@@ -432,6 +494,40 @@ class Automations extends CI_Controller {
             $this->session->set_flashdata('error_msg', 'Invalid request. Please try again!');
         }
         redirect('automations');
+    }
+    
+    
+    public function logs(){
+        $this->template->set('title', 'Automations Log');
+        $this->template->load('default_home', 'Automations/log', $this->data);
+    }
+    
+    public function get_automation_logs(){
+        $final['recordsTotal'] = $this->Automation_model->get_automation_logs('count');
+        $final['redraw'] = 1;
+        $final['recordsFiltered'] = $final['recordsTotal'];
+        $records = $this->Automation_model->get_automation_logs();
+        if(!empty($records)){
+            
+            foreach ($records as $rdk =>$rd){
+                $records[$rdk]['sr_no'] = $rdk+1; 
+                $tz_trigger_time = '';
+                if(!empty($rd['notification_date']) && $rd['notification_date'] != '00:00:00'){
+                    $trigger_time = date('Y-m-d H:i:s', strtotime($rd['notification_date']));
+                    $tz_trigger_time = getTimeBaseOnTimeZone($trigger_time);
+                }
+                $records[$rdk]['notification_date'] =  !empty($tz_trigger_time) ? date('d M Y', strtotime($tz_trigger_time)).'<br/>'.date('h:i a', strtotime($tz_trigger_time)): '';
+                
+                $tz_date = '';
+                if(!empty($rd['sent_at']) && $rd['sent_at'] != '0000-00-00 00:00:00'){
+                    $create_date = date('Y-m-d H:i:s', strtotime($rd['sent_at']));
+                    $tz_date = getTimeBaseOnTimeZone($create_date);
+                }
+                $records[$rdk]['sent_at'] =  !empty($tz_date) ? date('d M Y', strtotime($tz_date)).'<br/>'.date('h:i a', strtotime($tz_date)): '';
+            }
+        }
+        $final['data'] = $records;
+        echo json_encode($final);
     }
 
 }

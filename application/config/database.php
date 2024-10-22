@@ -75,7 +75,7 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => 'localhost',
+	'hostname' => '127.0.0.1',
 	'username' => 'wishes_official',
 	'password' => 'yj3kjbBNx6w7c3ws',
 	'database' => 'wishes_official',
@@ -95,7 +95,7 @@ $db['default'] = array(
 	'save_queries' => TRUE
 );
 
-
+/*
 $db['otherdb'] = array(
 	'dsn'	=> '',
 	'hostname' => 'localhost',
@@ -116,4 +116,4 @@ $db['otherdb'] = array(
 	'stricton' => FALSE,
 	'failover' => array(),
 	'save_queries' => TRUE
-);
+);*/

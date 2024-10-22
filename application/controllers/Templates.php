@@ -1,10 +1,12 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
-class Templates extends CI_Controller {
+class Templates extends CI_Controller
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->load->model(['Template_model', 'CMS_model']);
         $this->data = get_admin_data();
@@ -14,7 +16,8 @@ class Templates extends CI_Controller {
      * @uses : This Function load view of Category list.
      * @author : HPA
      */
-    public function index() {
+    public function index()
+    {
 
         $this->template->set('title', 'Templates');
         $this->template->load('default_home', 'User_templates/index', $this->data);
@@ -24,7 +27,8 @@ class Templates extends CI_Controller {
      * @uses : This Function is used to get result based on datatable in Category list page
      * @author : HPA
      */
-    public function list_templates($type = '') {
+    public function list_templates($type = '')
+    {
         $user_id = 0;
         if ($this->data['user_data']['type'] == 'user') {
             $user_id = $this->data['user_data']['id'];
@@ -34,10 +38,10 @@ class Templates extends CI_Controller {
         $final['recordsFiltered'] = $final['recordsTotal'];
         $final['data'] = $data =  $this->Template_model->get_all_templates(null, $type, $user_id);
         $start = $this->input->get('start') + 1;
-        if(!empty($data)){
-            foreach($data as $key =>$dt){
+        if (!empty($data)) {
+            foreach ($data as $key => $dt) {
                 $final['data'][$key]['sr_no'] = $start++;
-                $final['data'][$key]['created_at'] = !empty($dt['created_at']) && $dt['created_at'] != '0000-00-00 00:00:00' ? date('d M Y h:i a', strtotime($dt['created_at'])) : '';
+                $final['data'][$key]['created_at'] = !empty($dt['created_at']) && $dt['created_at'] != '0000-00-00 00:00:00' ? date('d M Y h:i a', strtotime(getTimeBaseOnTimeZone($dt['created_at']))) : '';
             }
         }
         echo json_encode($final);
@@ -47,7 +51,8 @@ class Templates extends CI_Controller {
      * @uses : This function is add/edit Category
      * @author : HPA
      */
-    public function edit() {
+    public function edit()
+    {
         $name = '';
         $id = $this->uri->segment(3);
         $template_id = ($id != '') ? base64_decode($id) : '';
@@ -64,7 +69,8 @@ class Templates extends CI_Controller {
         $this->template->load('default_home', 'User_templates/edit', $this->data);
     }
 
-    public function save() {
+    public function save()
+    {
         $unique_str = '';
         if ($this->input->post()) {
             $template_id = base64_decode($this->input->post('template_id'));
@@ -132,7 +138,8 @@ class Templates extends CI_Controller {
      * @uses : This function is add/edit Category
      * @author : HPA
      */
-    public function edit_custom() {
+    public function edit_custom()
+    {
         $name = '';
         $id = $this->uri->segment(3);
         $template_id = ($id != '') ? base64_decode($id) : '';
@@ -149,7 +156,8 @@ class Templates extends CI_Controller {
         $this->template->load('default_home', 'User_templates/edit_custom', $this->data);
     }
 
-    public function save_custom() {
+    public function save_custom()
+    {
         $unique_str = '';
         //pr($this->input->post());
         if ($this->input->post()) {
@@ -166,13 +174,17 @@ class Templates extends CI_Controller {
                 $this->form_validation->set_rules('btn_title[]', 'Title', 'trim|required');
             } elseif ($custom_type == 'text') {
                 $this->form_validation->set_rules('text_details', 'Description', 'trim|required');
+                $this->form_validation->set_rules('text_details', 'Description', 'trim|required');
+            } elseif ($custom_type == 'contacts') {
+                $this->form_validation->set_rules('contact_name', 'Contact Name', 'trim|required');
+                $this->form_validation->set_rules('contact_number', 'Contact Number', 'trim|required');
             }
             $url = base_url() . 'templates/add_custom';
             if (is_numeric($template_id)) {
                 $id = base64_encode($template_id);
                 $url = base_url() . 'templates/edit_custom/' . $id;
             }
-//            pr($this->input->post(), 1);
+            //            pr($this->input->post(), 1);
             if ($this->form_validation->run() == FALSE) {
                 $this->session->set_flashdata('error_msg', validation_errors());
                 redirect($url);
@@ -181,6 +193,22 @@ class Templates extends CI_Controller {
                 if ($custom_type == 'text') {
                     $details = array(
                         'text_details' => $this->input->post('text_details'),
+                    );
+                } else if ($custom_type == 'contacts') {
+                    $contact_name = $this->input->post('contact_name');
+                    $contact_number = $this->input->post('phone_number_full');
+                    $details = array(
+                        'name' => array(
+                            'formatted_name' => $contact_name,
+                            'first_name' => $contact_name,
+                        ),
+                        'phones' => array(
+                            array(
+                                'phone' => $contact_number,
+                                'type' => 'Mobile',
+                                'wa_id' => str_replace('+', '', $contact_number)
+                            ),
+                        )
                     );
                 } else {
                     $title = array();
@@ -253,7 +281,8 @@ class Templates extends CI_Controller {
      * @uses : This function is delete/block/activate details by id
      * @author : HPA
      * */
-    public function action($action, $template_id, $type = '') {
+    public function action($action, $template_id, $type = '')
+    {
         $template_id = base64_decode($template_id);
         $where = 'id = ' . $template_id;
         $user_id = 0;
@@ -309,7 +338,8 @@ class Templates extends CI_Controller {
         redirect('templates');
     }
 
-    public function get_template_details($template_id, $seq = 0) {
+    public function get_template_details($template_id, $seq = 0)
+    {
         $template_id = base64_decode($template_id);
         $seq = base64_decode($seq);
         $where = 'id = ' . $template_id;
@@ -323,6 +353,7 @@ class Templates extends CI_Controller {
             $where = ' user_id = ' . $user_id . ' and id=' . $template_id;
             $check_existing_template = $this->CMS_model->get_result(tbl_templates, $where, null, 1);
             if (isset($check_existing_template) && !empty($check_existing_template)) {
+
                 $this->data['template_datas'] = $check_existing_template;
                 if ($seq > 0) {
                     $this->data['update_option'] = true;
@@ -336,20 +367,22 @@ class Templates extends CI_Controller {
         echo json_encode($template_response);
         die;
     }
-    
-    public function get_template_description($template_id){
-        if(!empty($template_id)){
+
+    public function get_template_description($template_id)
+    {
+        if (!empty($template_id)) {
             $template_id = base64_decode($template_id);
             $where = ' id=' . $template_id;
             $template = $this->CMS_model->get_result(tbl_templates, $where, '', 1);
-            
-            if(!empty($template)){
+
+            if (!empty($template)) {
                 echo json_encode($template['description']);
             }
         }
     }
 
-    public function get_official_templates() {
+    public function get_official_templates()
+    {
         $url = 'https://graph.facebook.com/v17.0/';
         $check_user_settings = $response = array();
         if ($this->data['user_data']['type'] == 'user') {
@@ -411,7 +444,8 @@ class Templates extends CI_Controller {
                         }
                         if (!empty($deleted_templates)) {
                             foreach ($deleted_templates as $deleted_template) {
-                                $this->CMS_model->delete_data(tbl_templates, array('temp_id' => $deleted_template));
+                                //$this->CMS_model->delete_data(tbl_templates, array('temp_id' => $deleted_template));
+                                $this->CMS_model->update_record(tbl_templates, array('temp_id' =>$deleted_template), array('is_deleted' => 1));
                             }
                         }
                         $this->session->set_flashdata('success_msg', 'Template successfully fetched!');
@@ -426,7 +460,8 @@ class Templates extends CI_Controller {
         redirect('templates');
     }
 
-    public function curl_api($url, $token) {
+    public function curl_api($url, $token)
+    {
         $authorization = "Authorization: Bearer " . $token;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -442,19 +477,319 @@ class Templates extends CI_Controller {
     }
 
 
-    function get_templates(){
+    function get_templates()
+    {
         $templates = get_user_meta_templates();
         $select = '<div class="form-group mb-4"><label for="template_id">Select Templates</label><br/><select class="form-control basic template" id="template_id" name="template_id">';
 
-        if(!empty($templates)){
+        if (!empty($templates)) {
             $select .= '<option >Select Template</option>';
-            foreach($templates as $temp){
+            foreach ($templates as $temp) {
                 $select .= '<option value="' . $temp['id'] . '">' . $temp['name'] . '</option>';
             }
         }
         $select .= '</select></div>';
         echo json_encode($select);
     }
-   
 
+
+    /**
+     * @uses : This Function load add carousel page.
+     * @author : RR
+     */
+    public function create_carousel()
+    {
+        $checkAppID = getUserSettings('app_id');
+        if(empty($checkAppID)){
+            $this->session->set_flashdata('error_msg', 'Please update App ID in API Settings to create carousel!');
+            redirect(base_url().'templates');
+        }
+        $this->template->set('title', 'Templates');
+        $this->template->load('default_home', 'User_templates/create_carousel', $this->data);
+    }
+    
+    public function check_template_exist($templateName){
+        $user_id = $this->session->userdata('id');
+        $where = ' user_id = ' . $user_id . ' and name= "' . $templateName.'"';
+        $is_exist = $this->CMS_model->get_result(tbl_templates, $where, null, 1);
+        if(!empty($is_exist)){
+            echo json_encode(array('status' => true));
+        }else{
+            echo json_encode(array('status' => false));
+        }
+    }
+
+    public function start_upload_session()
+    {
+
+        $card_id = $this->input->post('card_id');
+        if (!empty($card_id)) {
+            foreach ($_FILES as $fileK => $fileV) {
+                $cardId = str_replace('media_', '', $fileK);
+                if ($cardId == $card_id) {
+                    if (!empty($fileV['name'])) {
+                        $file_arr = array(
+                            'file_length' => $fileV['size'],
+                            'file_type' => $fileV['type'],
+                            'file_name' => $fileV['name'],
+                            'file_tmp_path' => $fileV['tmp_name']
+                        );
+
+                        $response = startUploadSession($file_arr);
+                        if (!empty($response)) {
+                            $res_arr = json_decode($response, 1);
+                            if (isset($res_arr['h']) && !empty($res_arr['h'])) {
+                                $formate = explode('/', $fileV['type']);
+                                $return = array(
+                                    'format' => $formate[0],
+                                    'header_handle' => $res_arr['h']
+                                );
+                            } else if (isset($res_arr['error']) && !empty($res_arr['error'])) {
+                                $return = array('error' => $res_arr['error']['message']);
+                            }
+                        } else {
+                            $return = array('error' => 'file upload failed!');
+                        }
+                        echo json_encode($return);
+                        exit();
+                    }
+                }
+            }
+            echo json_encode(array('error' => 'Something went wrong! image uploading failed.'));
+            exit();
+        }
+        echo json_encode(array('error' => 'Image uploading failed'));
+        exit();
+    }
+
+    public function start_upload()
+    {
+        pr($this->input->post(), 1);
+    }
+
+    public function save_carousel()
+    {
+        //pr($this->input->post());
+        $this->form_validation->set_rules('template_name', 'Template Name', 'trim|required');
+        $this->form_validation->set_rules('template_category', 'Template Category', 'trim|required');
+        $this->form_validation->set_rules('template_language', 'Template Language', 'trim|required');
+        $this->form_validation->set_rules('bubble_message', 'Bubble Message', 'trim|required');
+        $bubble_message = $this->input->post('bubble_message');
+
+
+        //Check if Bubble Message have variable. if it has then, check example value is provided or not
+        $body_text = [];
+        $placeholderPattern = '/{{\d+}}/';
+        if (!empty($bubble_message)) {
+            preg_match_all($placeholderPattern, $bubble_message, $matches);
+            $bm_example = $matches[0];
+            $bmi = 1;
+            while ($bmi <= count($bm_example)) {
+                $this->form_validation->set_rules('bm_ex_' . $bmi, 'Bubble Message Ex.' . $bmi, 'trim|required');
+                array_push($body_text, $this->input->post('bm_ex_' . $bmi));
+                $bmi++;
+            }
+        }
+
+        //Check at least one Carousel card exist
+        $content = $this->input->post('content');
+        if (empty($content)) {
+            $this->form_validation->set_rules(
+                'content',
+                'Carousel Card',
+                'required',
+                array('required' => 'Please add at least one %s.')
+            );
+        }
+
+        if ($this->form_validation->run() == FALSE) {
+            echo json_encode(array('error' => validation_errors()));
+        } else {
+            $template_name = $this->input->post('template_name');
+            $template_language = $this->input->post('template_language');
+            $template_category = $this->input->post('template_category');
+            $template_arr = array(
+                'name' => $template_name,
+                'language' => $template_language,
+                'category' => $template_category,
+            );
+            $components_arr = [];
+
+            $bubble_message_arr = array(
+                'type' => 'BODY',
+                'text' =>  $bubble_message,
+            );
+            if (!empty($body_text)) {
+                $bubble_message_arr['example']['body_text'] = array($body_text);
+            }
+
+            $carousel_arr = array(
+                "type" => "CAROUSEL",
+            );
+
+
+            foreach ($content as $c) {
+                $content_arr = $this->input->post($c);
+
+                $carousel_component = array(
+                    "components" => array()
+                );
+
+                $header_component = array(
+                    'type' => "HEADER"
+                );
+                $body_component = array(
+                    'type' => "BODY"
+                );
+                $button_component = array(
+                    "type" => "BUTTONS",
+                );
+                $buttons_arr = $buttons_one = $buttons_two = [];
+
+                //Carousel Header Component
+                //check image or video file selected or not
+                if (!isset($content_arr['header_handle']) && empty($content_arr['header_handle'])) {
+                    echo json_encode(array('error' => 'Please select image or video media file', 'card' => $c));
+                    exit();
+                } else {
+                    if (empty($content_arr['format'])) {
+                        echo json_encode(array('error' => 'Please select image or video media file', 'card' => $c));
+                        exit();
+                    } else {
+                        $header_component['format'] = strtoupper($content_arr['format']);
+                    }
+                    
+                    $header_component["example"]["header_handle"] = array($content_arr['header_handle']);
+                    array_push($carousel_component["components"], $header_component);
+                }
+                //Carousel Body Component
+                if (isset($content_arr['card_content'])) {
+                    if (empty($content_arr['card_content'])) {
+                        echo json_encode(array('error' => 'Please provide Content', 'card' => $c));
+                        exit();
+                    } else {
+                        $body_component["text"] = $content_arr['card_content'];
+                        //Check if Content have variable. if it has then, check example value is provided or not
+                        preg_match_all($placeholderPattern, $content_arr['card_content'], $Contentmatches);
+                        $content_example = $Contentmatches[0];
+                        $coni = 1;
+                        $cExError = '';
+                        $body_component_text = [];
+                        while ($coni <= count($content_example)) {
+                            if (empty($content_arr['content_ex_' . $coni])) {
+                                $cExError .= '<p>Content Ex.' . $coni . ' field is required.</p>';
+                            } else {
+                                array_push($body_component_text, $content_arr['content_ex_' . $coni]);
+                            }
+                            $coni++;
+                        }
+                        if (!empty($cExError)) {
+                            echo json_encode(array('error' => $cExError, 'card' => $c));
+                            exit();
+                        }
+                        if (!empty($body_component_text)) {
+                            $body_component['example']['body_text'] = array($body_component_text);
+                        }
+
+                        array_push($carousel_component["components"], $body_component);
+                    }
+                }
+                //Carousel Button Component
+                $error_btn = '';
+                if (isset($content_arr['btn_one_type'])) {
+                    $buttons_one["type"] =  $content_arr['btn_one_type'];
+                    if (empty($content_arr['btn_one_type_text'])) {
+                        $error_btn .= 'Please provide ' . str_replace('_', ' ', $content_arr['btn_one_type']) . ' button text value <br/>';
+                    } else {
+                        $buttons_one["text"] = $content_arr['btn_one_type_text'];
+                        if ($content_arr['btn_one_type'] == 'URL') {
+                            if (empty($content_arr['btn_one_url'])) {
+                                $error_btn .= 'Please provide URL for button one';
+                            } else {
+                                $buttons_one["url"] = $content_arr['btn_one_url'];
+                                if ($content_arr['btn_one_url_type'] == 'dynamic') {
+                                    if (empty($content_arr['btn_one_url_example'])) {
+                                        $error_btn .= 'Please provide URL example for button one';
+                                    } else {
+                                        $buttons_one["example"] = array($content_arr['btn_one_url_example']);
+                                    }
+                                }else{
+                                    $buttons_one["example"] = array($content_arr['btn_one_url']);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isset($content_arr['btn_two_type'])) {
+                    $buttons_two["type"] =  $content_arr['btn_two_type'];
+                    if (empty($content_arr['btn_two_type_text'])) {
+                        $error_btn .= 'Please provide ' . str_replace('_', ' ', $content_arr['btn_two_type']) . ' button text value <br/>';
+                    } else {
+                        $buttons_two["text"] = $content_arr['btn_two_type_text'];
+                        if ($content_arr['btn_two_type'] == 'URL') {
+                            if (empty($content_arr['btn_two_url'])) {
+                                $error_btn .= 'Please provide URL for button one';
+                            } else {
+                                $buttons_two["url"] = $content_arr['btn_two_url'];
+                                if ($content_arr['btn_two_url_type'] == 'dynamic') {
+                                    if (empty($content_arr['btn_two_url_example'])) {
+                                        $error_btn .= 'Please provide URL example for button two';
+                                    } else {
+                                        $buttons_two["example"] = array($content_arr['btn_two_url_example']);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!empty($error_btn)) {
+                    echo json_encode(array('error' => $error_btn, 'card' => $c));
+                    exit();
+                } else {
+                    if(!empty($buttons_one)){
+                        array_push($buttons_arr, $buttons_one);
+                    }
+                    if(!empty($buttons_two)){
+                        array_push($buttons_arr, $buttons_two);
+                    }
+                    
+                    if ($buttons_arr) {
+                        $button_component['buttons'] = $buttons_arr;
+                        array_push($carousel_component["components"], $button_component);
+                    }
+                }
+                $carousel_arr['cards'][] = $carousel_component;
+            }
+
+            array_push($components_arr, $bubble_message_arr, $carousel_arr);
+
+            $template_arr['components'] = $components_arr;
+            $template = json_encode($template_arr, JSON_UNESCAPED_SLASHES);
+            $response = create_meta_template(str_replace('\r\n', '\n', $template)); 
+            if (!empty($response)) {
+                $response_arr = json_decode($response, 1);
+                if (isset($response_arr['error'])) {
+                    echo json_encode(array('error' => isset($response_arr['error']['error_user_msg']) ? $response_arr['error']['error_user_msg'] : $response_arr['error']['message']));
+                    exit();
+                } else {
+                    $success_msg = '';
+                    if ($response_arr['status'] == 'APPROVED') {
+                        $success_msg = "<b>APPROVED!</b> Your carousel template has been created. It's ready to use!";
+                    }
+                    if ($response_arr['status'] == 'PENDING') {
+                        $success_msg = "<b>PENDING!</b> Your carousel template has been created. It's in review!";
+                    }
+                    
+                    if ($response_arr['status'] == 'REJECTED') {
+                        $success_msg = "<b>REJECTED!</b> Your request to create carousel template has been rejected!";
+                        echo json_encode(array('warning' => $success_msg));
+                        exit();
+                    }
+                    echo json_encode(array('success' => $success_msg));
+                    exit();
+                }
+            }
+        }
+    }
 }

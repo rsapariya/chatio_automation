@@ -40,16 +40,24 @@
                                     <div class="col-12 mt-2">
                                         <div class="form-group">
                                             <label for="hName">Email</label>
-                                            <input type="email" class="form-control" id="hEmail" name="email" placeholder="" value="<?php echo isset($user_datas['email']) ? $user_datas['email'] : '' ?>" required>
+                                            <input type="email" class="form-control" id="hEmail" name="email" placeholder="" value="<?php echo isset($user_datas['email']) ? $user_datas['email'] : '' ?>">
                                             <div class="valid-feedback"></div>
-                                            <div class="invalid-feedback">Please fill the email</div>
+                                            <div class="invalid-feedback"></div>
                                         </div> 
                                     </div>
                                     <div class="col-12 mt-2">
                                         <div class="form-group">
+                                            <?php
+                                                $phone_number = isset($user_datas['phone_number']) ? $user_datas['phone_number'] : '';
+                                                $phone_number_full = isset($user_datas['phone_number_full']) ? $user_datas['phone_number_full'] : '';
+                                                $country_code = '';
+                                                if(!empty($phone_number) && !empty($phone_number_full)){
+                                                    $country_code = str_replace($phone_number, '', $phone_number_full);
+                                                }
+                                            ?>
                                             <label for="hPhoneNo">Phone Number</label><br/>
-                                            <input type="tel" class="form-control" id="hPhoneNo" name="phone_number" placeholder="" value="<?php echo isset($user_datas['phone_number']) ? $user_datas['phone_number'] : '' ?>" required>
-                                            <input type="hidden" id="country_code" name='country_code' value=''/>
+                                            <input type="tel" class="form-control" id="hPhoneNo" name="phone_number" placeholder="9999999999" value="<?php echo $phone_number ?>" required>
+                                            <input type="hidden" id="country_code" name='country_code' value='<?php echo $country_code ?>'/>
                                             <div class="valid-feedback"></div>
                                             <div class="invalid-feedback">Please fill the phone</div>
                                         </div> 
@@ -64,19 +72,20 @@
                                         </div> 
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <?php $birth_date = isset($user_datas['birth_date']) ? date('M d, Y', strtotime($user_datas['birth_date'])) : ''; ?>
+                                        <?php 
+                                        $birth_date = isset($user_datas['birth_date']) && !empty($user_datas['birth_date']) && $user_datas['birth_date'] !== '0000-00-00' ? date('M d, Y', strtotime(getServerTimeZone($user_datas['birth_date'], 1))) : ''; ?>
                                         <div class="form-group">
                                             <label for="hgroupNo">Birth Date</label>
-                                            <input id="dateFlatpickr" name='birth_date' value="<?php echo $birth_date ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Birthdate">
-                                            <div class="invalid-feedback">Please fill the birth date</div>
+                                            <input id="birth_date" name='birth_date' value="<?php echo $birth_date ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Birthdate">
+                                            <div class="invalid-feedback"></div>
                                         </div> 
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <?php $anniversary_date = isset($user_datas['anniversary_date']) ? date('M d, Y', strtotime($user_datas['anniversary_date'])) : ''; ?>
+                                        <?php $anniversary_date = isset($user_datas['anniversary_date']) && !empty($user_datas['anniversary_date'])  && $user_datas['anniversary_date'] !== '0000-00-00' ? date('M d, Y', strtotime(getServerTimeZone($user_datas['anniversary_date'], 1))) : ''; ?>
                                         <div class="form-group">
                                             <label for="hgroupNo">Anniversary Date</label>
-                                            <input id="dateFlatpickr" name='anniversary_date' value="<?php echo $anniversary_date ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Birthdate">
-                                            <div class="invalid-feedback">Please fill the anniversary date</div>
+                                            <input id="anniversary_date" name='anniversary_date' value="<?php echo $anniversary_date ?>" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Select Anniversary Date">
+                                            <div class="invalid-feedback"></div>
                                         </div> 
                                     </div>
                                     <div class="col-12">
@@ -124,8 +133,15 @@
         </div>
     </div>
 </div>
+<?php 
+//pr($birth_date);
+//pr($anniversary_date, 1);
+?>
 <script>
+    var birthDate = '<?php echo $birth_date ?>';
+    var anniversaryDate = '<?php echo $anniversary_date ?>';
     var userTags = '<?php echo isset($user_tags) && !empty($user_tags) ? json_encode($user_tags) : "" ?>';
+    
 </script>
 
 <script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/clients.js?t=<?php echo date('YmdHis') ?>"></script>

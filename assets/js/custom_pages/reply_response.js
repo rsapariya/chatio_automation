@@ -11,7 +11,7 @@ var reply_responses_dttble = $('#reply_responses_dttble').DataTable({
         },
         "info": "Showing page _PAGE_ of _PAGES_"
     },
-    "order": [[4, "desc"]],
+    "order": [[0, "desc"]],
     "dom": 'lfBrtip',
     "buttons": [
         {extend: 'selectAll', className: 'btn btn-ouline-primary'},
@@ -82,9 +82,9 @@ var reply_responses_dttble = $('#reply_responses_dttble').DataTable({
     },
     "columns": [
         {data: null, defaultContent: '', sortable: false, className: 'select-checkbox'},
-        {data: "name", visible: true},
-        {data: "mobile_number", visible: true},
-        {data: "response", visible: true},
+        {data: "from_profile_name", visible: true},
+        {data: "phone_number", visible: true},
+        {data: "message", visible: true},
         {data: "created_at", visible: true}
     ],
     "select": {
@@ -93,12 +93,9 @@ var reply_responses_dttble = $('#reply_responses_dttble').DataTable({
     }
 });
 
-
-
 function isNumeric(value) {
     return !isNaN(parseFloat(value)) && isFinite(value);
 }
-
 
 function delete_reply_response(id) {
     new swal({
@@ -118,14 +115,14 @@ function delete_reply_response(id) {
     })
 }
 
-
-$(document).find(".basic").select2({
+/*$(document).find(".basic").select2({
     tags: true
-});
+});*/
 $(document).find('#query_time').daterangepicker({
     opens: 'left',
-    startDate: moment().subtract(6, 'days'),
-    endDate: moment(),
+    autoUpdateInput: false,
+    //startDate: moment().subtract(6, 'days'),
+    //endDate: moment(),
     showDropdowns: true,
     ranges: {
         'Today': [moment(), moment()],
@@ -136,16 +133,19 @@ $(document).find('#query_time').daterangepicker({
         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
     },
 });
+
 $(document).find('.filter-response-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('#reply_responses_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.clear-response-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('select#trigger_text').val('').trigger('change');
     $(document).find('#query_time').val('');
     $(document).find('#reply_responses_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.generate-excel-response-list').on('click', function (e) {
     e.preventDefault();
     var trigger_text = $(document).find('select#trigger_text :selected').val();

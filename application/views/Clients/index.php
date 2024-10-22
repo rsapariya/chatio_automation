@@ -26,7 +26,7 @@
                         <div class="col-lg-6 col-12 d-flex justify-content-end mt-3">
                             <button data-target="<?php echo base_url() ?>contacts/add" class="btn btn-primary mb-2 me-4 _effect--ripple waves-effect waves-light btn-add-client">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                                <span class="btn-text-inner">Add Client</span>
+                                <span class="btn-text-inner">Add Contact</span>
                             </button>
                             <button data-target="<?php echo base_url() ?>contacts/add_multiple" class="btn btn-primary mb-2 me-4 _effect--ripple waves-effect waves-light btn-add-client">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
@@ -36,17 +36,17 @@
                     </div>
                 </div> 
                 <div class=" widget-content-area">
+                    <div class="userMessage"></div>
                     <div class="table-responsive pt-3">
                         <table id="clients_dttble" class="table table-striped  no-footer table-bordered">
                             <thead>
                                 <tr>
                                     <th class="checkbox-column text-center">#</th>
                                     <th>Name</th>
-                                    <th>Email</th>
                                     <th>Mobile No.</th>
-                                    <th>Birth Date</th>
-                                    <th>Anniversary Date</th>
+                                    <th>Tags</th>
                                     <th>Created</th>
+                                    <th>Status</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
@@ -58,5 +58,6 @@
             </div>
         </div>
     </div>
+    <div class="contact_modal_block"></div>
 </div>
-<script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/clients.js"></script>
+<script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/clients.js?t=<?php echo date('YmdHis'); ?>"></script>
