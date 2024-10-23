@@ -40,10 +40,6 @@ class Dashboard extends CI_Controller {
 
     public function edit() {
         $this->template->set('title', 'Edit Profile');
-        $account_details = getMetaAccountDetails();
-        $this->data['account_details'] = !empty($account_details) && !isset($account_details['error']) ? $account_details : '';
-        $phone_details = getMetaPhoneDetails();
-        $this->data['phone_details'] = !empty($phone_details) && !isset($phone_details['error']) ? $phone_details['data'] : '';
 
         $this->template->load('default_home', 'Dashboard/profile_edit', $this->data);
     }
@@ -99,6 +95,33 @@ class Dashboard extends CI_Controller {
                 redirect($url);
             }
         }
+    }
+
+    public function waba_status() {
+        $this->template->set('title', 'WABA Status');
+
+        if ($this->session->userdata('type') == 'user') {
+            $user_id = $this->session->userdata('id');
+        }
+        if ($this->session->userdata('type') == 'member') {
+            $user_id = $this->session->userdata('added_by');
+        }
+
+        $where = 'user_id = ' . $this->db->escape($user_id);
+        $user_cread = $this->CMS_model->get_result(tbl_user_settings, $where, '', 1);
+        if (!empty($user_cread)) {
+            $account_details = getMetaAccountDetails($user_cread);
+            $this->data['account_details'] = !empty($account_details) && !isset($account_details['error']) ? $account_details : '';
+            $phone_details = getMetaPhoneDetails($user_cread);
+            $this->data['phone_details'] = !empty($phone_details) && !isset($phone_details['error']) ? $phone_details['data'] : '';
+            $message_details = getMessageDetails($user_cread);
+            $message_details_analytics = !empty($message_details) && isset($message_details['analytics']) ? $message_details['analytics']: '';
+            $this->data['message_details'] = isset($message_details_analytics['data_points']) && !empty($message_details_analytics['data_points']) ? array_reverse($message_details_analytics['data_points']) : '';
+            $conversion_cost = getConversionCost($user_cread);
+            pr($conversion_cost, 1);
+        }
+
+        $this->template->load('default_home', 'Dashboard/waba_status', $this->data);
     }
 
     public function upload_file() {

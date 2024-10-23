@@ -62,6 +62,7 @@ $route['register_post'] = 'login/register_post';
 $route['logout'] = 'login/logout';
 $route['dashboard'] = 'dashboard';
 $route['edit_profile'] = 'dashboard/edit';
+$route['WABA-status'] = 'dashboard/waba_status';
 $route['settings'] = 'users/settings';
 
 $route['contacts'] = 'clients';

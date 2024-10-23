@@ -290,6 +290,10 @@ class ReplyMessage extends CI_Controller {
 
                 if (isset($_FILES['attachment']['name']) && !empty($_FILES['attachment']['name'])) {
                     $path = ATTACHMENT_IMAGE_UPLOAD_PATH;
+                    if(!file_exists($path)){
+                        mkdir($path,0777, true);
+                    }
+                    
                     $config['upload_path'] = $path;
                     $config['allowed_types'] = 'jpg|jpeg|png|pdf|mp4';
                     $config['overwrite'] = TRUE;
@@ -531,5 +535,6 @@ class ReplyMessage extends CI_Controller {
         }
         redirect('replyMessage');
     }
+    
 
 }

@@ -798,6 +798,13 @@ function getServerTimeZone($time_str, $is_date_time = false) {
     return $time_str;
 }
 
+function getTimeBaseOnTimeZoneFromTimeSatmp($timestamp){
+    $date = new DateTime("@$timestamp");
+    $date->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    $date_time = $date->format('Y-m-d H:i:s');
+    return $date_time;
+}
+
 function creteServerFileLink($serverPath) {
     if (!empty($serverPath)) {
         $link_arr = explode('/', $serverPath);
@@ -1638,19 +1645,9 @@ function image_watermark($url, $text) {
     }
 }
 
-function getMetaAccountDetails() {
+function getMetaAccountDetails($user_cread) {
     $ci = &get_instance();
     $ci->load->model('CMS_model');
-
-    if ($ci->session->userdata('type') == 'user') {
-        $user_id = $ci->session->userdata('id');
-    }
-    if ($ci->session->userdata('type') == 'member') {
-        $user_id = $ci->session->userdata('added_by');
-    }
-
-    $where = 'user_id = ' . $ci->db->escape($user_id);
-    $user_cread = $ci->CMS_model->get_result(tbl_user_settings, $where, '', 1);
 
     if (!empty($user_cread)) {
         $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
@@ -1685,19 +1682,9 @@ function getMetaAccountDetails() {
     }
 }
 
-function getMetaPhoneDetails() {
+function getMetaPhoneDetails($user_cread) {
     $ci = &get_instance();
     $ci->load->model('CMS_model');
-
-    if ($ci->session->userdata('type') == 'user') {
-        $user_id = $ci->session->userdata('id');
-    }
-    if ($ci->session->userdata('type') == 'member') {
-        $user_id = $ci->session->userdata('added_by');
-    }
-
-    $where = 'user_id = ' . $ci->db->escape($user_id);
-    $user_cread = $ci->CMS_model->get_result(tbl_user_settings, $where, '', 1);
 
     if (!empty($user_cread)) {
         $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
@@ -1731,6 +1718,99 @@ function getMetaPhoneDetails() {
         redirect('/');
     }
 }
+
+function getMessageDetails($user_cread) {
+    $ci = &get_instance();
+    $ci->load->model('CMS_model');
+
+    if (!empty($user_cread)) {
+        $endDateTime = date('Y-m-d').' 18:30:00';
+        
+        $current_date = new DateTime($endDateTime);
+        $current_date->modify('-30 days');
+        $startDateTime = $current_date->format('Y-m-d H:i:s');
+        
+        $start = strtotime($startDateTime);
+        $end = strtotime($endDateTime);
+        
+        $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
+        $permanent_access_token = isset($user_cread['permanent_access_token']) && !empty($user_cread['permanent_access_token']) ? $user_cread['permanent_access_token'] : '';
+
+        if (!empty($business_account_id) && !empty($permanent_access_token)) {
+            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=analytics.start(".$start.").end(".$end.").granularity(DAY)&access_token=" . $permanent_access_token;
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $ch_result = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                $error_message = curl_error($ch);
+                curl_close($ch);
+                return ['error' => $error_message];
+            }
+
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($http_code >= 200 && $http_code < 300) {
+                return json_decode($ch_result, true);
+            } else {
+                return ['error' => 'HTTP Error ' . $http_code, 'response' => $ch_result];
+            }
+        } else {
+            redirect('/');
+        }
+    } else {
+        redirect('/');
+    }
+}
+
+function getConversionCost($user_cread) {
+    $ci = &get_instance();
+    $ci->load->model('CMS_model');
+
+    if (!empty($user_cread)) {
+        $endDateTime = date('Y-m-d').' 18:30:00';
+        
+        $current_date = new DateTime($endDateTime);
+        $current_date->modify('-60 days');
+        $startDateTime = $current_date->format('Y-m-d H:i:s');
+        
+        $start = strtotime($startDateTime);
+        $end = strtotime($endDateTime);
+        
+        $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
+        $permanent_access_token = isset($user_cread['permanent_access_token']) && !empty($user_cread['permanent_access_token']) ? $user_cread['permanent_access_token'] : '';
+
+        if (!empty($business_account_id) && !empty($permanent_access_token)) {
+            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=conversation_analytics.start(".$start.").end(".$end.").granularity(DAILY).dimensions([])&access_token=" . $permanent_access_token;
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $ch_result = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                $error_message = curl_error($ch);
+                curl_close($ch);
+                return ['error' => $error_message];
+            }
+
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($http_code >= 200 && $http_code < 300) {
+                return json_decode($ch_result, true);
+            } else {
+                return ['error' => 'HTTP Error ' . $http_code, 'response' => $ch_result];
+            }
+        } else {
+            redirect('/');
+        }
+    } else {
+        redirect('/');
+    }
+}
+
 
 function get_json_api_data($message = '', $business_account_id = '') {
     $ci = &get_instance();

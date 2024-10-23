@@ -409,28 +409,114 @@ class Webhook_live extends CI_Controller {
 //                        }
 //                    }
 
-                    /*$reply_message_arr = $this->ReplyMessage_model->get_trigger_messages($this->business_account_id);
+                    $reply_message_arr = $this->ReplyMessage_model->get_trigger_messages($this->business_account_id);
                     if (!empty($reply_message_arr) && !empty($message)) {
                         $matched_keywords = array();
-                        file_put_contents('Z_trigger_on.txt', $message.PHP_EOL, FILE_APPEND | LOCK_EX);
-                        foreach ($reply_message_arr as $reply_message) {
-                            if(!key_exists($reply_message['reply_id'], $matched_keywords)){
-                                if (stripos($message, $reply_message['reply_text']) !== false) {
-                                     if($reply_message['reply_text'] == $message){
-                                         $matched_keywords = $reply_message;
-                                     }else if($reply_message['trigger_on'] == 'contains'){
-                                         $matched_keywords = $reply_message;
-                                     }
+                        $this->access_token = !empty($reply_message_arr['permanent_access_token']) ? $reply_message_arr['permanent_access_token'] : '';
+                        unset($reply_message_arr['permanent_access_token']);
+                        $trigger_arr = isset($reply_message_arr) && !empty($reply_message_arr) ? $reply_message_arr : '';
+                        if (!empty($trigger_arr)) {
+                            foreach ($trigger_arr as $trigger) {
+                                if (!key_exists($trigger['reply_id'], $matched_keywords)) {
+                                    if (stripos($message, $trigger['reply_text']) !== false) {
+                                        if ((empty($trigger['trigger_on']) && strtolower($trigger['reply_text']) == strtolower($message)) || strtolower($trigger['reply_text']) == strtolower($message)) {
+                                            $matched_keywords[$trigger['reply_id']] = $trigger;
+                                        } else if ($trigger['trigger_on'] == 'contains') {
+                                            $matched_keywords[$trigger['reply_id']] = $trigger;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!empty($matched_keywords)) {
+                                foreach ($matched_keywords as $matchedK) {
+                                    $attachments = !empty($matchedK['attachments']) ? json_decode($matchedK['attachments']) : '';
+                                    $attachments_caption = !empty($matchedK['attachments_caption']) ? json_decode($matchedK['attachments_caption'], 1) : '';
+
+                                    $attachments_name = !empty($matchedK['attachments_name']) ? (array) json_decode($matchedK['attachments_name']) : '';
+                                    $user_id = isset($user_datas['user_id']) ? $user_datas['user_id'] : 0;
+                                    if (!empty($attachments)) {
+                                        if ($this->from_phone_number_id != '' && $this->access_token != '') {
+                                            $this->whatsapp_app_cloud_api = new WhatsAppCloudApi([
+                                                'from_phone_number_id' => $this->from_phone_number_id,
+                                                'access_token' => $this->access_token,
+                                            ]);
+                                            foreach ($attachments as $key => $attachment) {
+                                                $is_send_template = false;
+
+                                                $chat_logs = array(
+                                                    'user_id' => isset($user_datas['user_id']) ? $user_datas['user_id'] : 0,
+                                                    'from_user' => '0',
+                                                    'from_profile_name' => $profile_name,
+                                                    'phone_number' => $this->phone_number,
+                                                    'created' => !empty($timestamp) ? date('Y-m-d H:i:s', $timestamp) : date('Y-m-d H:i:s')
+                                                );
+
+                                                if (is_numeric($attachment)) {
+                                                    $reply_list_template_datas = $this->ReplyMessage_model->get_list_templates($matchedK['user_id'], $attachment, true);
+                                                    $reply_meta_template_datas = $this->ReplyMessage_model->get_meta_templates($matchedK['user_id'], $attachment, true);
+                                                    if (!empty($reply_list_template_datas) && empty($reply_meta_template_datas)) {
+                                                        $this->send_custom_template($this->phone_number, $reply_list_template_datas);
+                                                        $is_send_template = true;
+                                                    }
+                                                    if (!empty($reply_meta_template_datas) && empty($reply_list_template_datas)) {
+                                                        $components = create_template_message($reply_meta_template_datas['id'], $key, $attachment, $profile_name, 'reply_message', $user_id);
+                                                        $post_data = array(
+                                                            'to' => $this->phone_number,
+                                                            'template' => $reply_meta_template_datas['name'],
+                                                            'language' => $reply_meta_template_datas['temp_language'],
+                                                        );
+                                                        $post_data['components'] = (!empty($components)) ? $components : array();
+                                                        $response_json = $this->send_template($post_data);
+
+                                                        $temp_message["template"] = array(
+                                                            "name" => $reply_meta_template_datas['name'],
+                                                            "language" => array("code" => $reply_meta_template_datas['temp_language']),
+                                                            "components" => $post_data['components']
+                                                        );
+                                                        $chat_logs['message_type'] = 'template';
+                                                        $chat_logs['message'] = json_encode($temp_message);
+                                                        $chat_logs['api_response'] = json_encode($response_json);
+
+                                                        $this->CMS_model->insert_data(tbl_chat_logs, $chat_logs);
+                                                    }
+                                                } else {
+                                                    $attachment_name = isset($attachments_name[$key]) ? $attachments_name[$key] : '';
+                                                    $document_link = base_url() . '' . ATTACHMENT_IMAGE_UPLOAD_PATH . '' . $attachment;
+                                                    $attach_caption = isset($attachments_caption[$key]) ? $attachments_caption[$key] : '';
+
+                                                    $image_type = substr($attachment, strrpos($attachment, '.') + 1);
+                                                    if ($image_type == 'png' || $image_type == 'jpeg' || $image_type == 'jpg') {
+                                                        $message_type = 'image';
+                                                    } else if ($image_type == 'aac' || $image_type == 'amr' || $image_type == 'mp3' || $image_type == 'm4a' || $image_type == 'ogg') {
+                                                        $message_type = 'audio';
+                                                    } else if ($image_type == '3gp' || $image_type == 'mp4') {
+                                                        $message_type = 'video';
+                                                    } else {
+                                                        $message_type = 'document';
+                                                    }
+
+
+                                                    $chat_logs['message_type'] = $message_type;
+                                                    $chat_logs['media'] = $document_link;
+                                                    $chat_logs['message'] = $attach_caption;
+
+                                                    $response = $this->send_media($this->phone_number, $document_link, $attachment, $attachment_name, $attach_caption);
+                                                    if (!empty($response) && isset($response['messages'][0]['id']) && !empty($response['messages'][0]['id'])) {
+                                                        $chat_logs['message_id'] = $response['messages'][0]['id'];
+                                                    }
+                                                    $chat_logs['api_response'] = json_encode($response);
+                                                    $this->CMS_model->insert_data(tbl_chat_logs, $chat_logs);
+                                                    sleep(1);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                        file_put_contents('Z_trigger_on.txt', $message.PHP_EOL, FILE_APPEND | LOCK_EX);
-                        if(!empty($matched_keywords)){
-                            file_put_contents('Z_trigger_on.txt', json_encode($matched_keywords).PHP_EOL, FILE_APPEND | LOCK_EX);
-                        }
-                    }*/
+                    }
 
-                    $reply_message_datas = $this->ReplyMessage_model->get_trigger_message_attachment($message, $this->business_account_id);
+                    /*$reply_message_datas = $this->ReplyMessage_model->get_trigger_message_attachment($message, $this->business_account_id);
                     if (isset($reply_message_datas) && !empty($reply_message_datas)) {
 
                         $this->access_token = !empty($reply_message_datas['permanent_access_token']) ? $reply_message_datas['permanent_access_token'] : '';
@@ -517,6 +603,7 @@ class Webhook_live extends CI_Controller {
                             }
                         }
                     }
+                    */
                     sleep(1);
                 }
                 return $challenge;
