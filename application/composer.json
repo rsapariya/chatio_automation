@@ -1,9 +1,0 @@
-{
-    "require": {
-        "netflie/whatsapp-cloud-api": "^2.1",
-        "yidas/codeigniter-phpunit": "^1.1",
-        "yidas/codeigniter-queue-worker": "^1.0",
-        "giggsey/libphonenumber-for-php": "^8.13",
-        "romainrg/ratchet_client": "^1.0"
-    }
-}
