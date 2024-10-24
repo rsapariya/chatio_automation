@@ -176,6 +176,6 @@ class Team extends CI_Controller {
         }
         echo json_encode($response);
         exit();
-        
+        //Delete file from server
     }
 }
