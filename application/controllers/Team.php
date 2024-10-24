@@ -176,5 +176,6 @@ class Team extends CI_Controller {
         }
         echo json_encode($response);
         exit();
+        
     }
 }
