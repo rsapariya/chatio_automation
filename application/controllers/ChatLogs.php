@@ -234,7 +234,8 @@ class ChatLogs extends CI_Controller {
     function get_contacts($filter = [], $count= '') {
         
         $customers = $this->Chatlogs_model->get_customers($filter, $count);
-        
+        echo $this->db->last_query();
+        exit();
         if(empty($count) && !empty($customers)){
             foreach ($customers as $key => $cust) {
                 $customers[$key]['message_type'] = '';
