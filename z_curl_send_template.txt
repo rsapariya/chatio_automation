@@ -1,0 +1,4 @@
+{"messaging_product":"whatsapp","recipient_type":"individual","to":"+919510482966","type":"template","template":null}
+{"messaging_product":"whatsapp","recipient_type":"individual","to":"+919510482966","type":"template","template":null}
+{"messaging_product":"whatsapp","recipient_type":"individual","to":"+919510482966","type":"template","template":null}
+{"messaging_product":"whatsapp","recipient_type":"individual","to":"+919510482966","type":"template","template":null}
