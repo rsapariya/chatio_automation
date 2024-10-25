@@ -84,6 +84,17 @@ class Users extends CI_Controller {
             return TRUE;
         }
     }
+    
+    
+    function check_deleted_user($email) {
+        $where = 'email = ' . $this->db->escape($email) . ' AND is_deleted = 1 AND type="user"';
+        $check_user = $this->CMS_model->get_result(tbl_users, $where, null, 1);
+        if (!empty($check_user)) {
+            return $check_user['id'];
+        } else {
+            return false;
+        }
+    }
 
     public function save() {
         $unique_str = '';
@@ -123,7 +134,7 @@ class Users extends CI_Controller {
                 }
                 redirect($url);
             } else {
-                $where = array('id' => $user_id);
+                
                 $update_array = [
                     'name' => $this->input->post('name'),
                     'email' => $this->input->post('email'),
@@ -131,13 +142,23 @@ class Users extends CI_Controller {
                     'phone_number_full' => ltrim($this->input->post('phone_number_full'), '+'),
                     'type' => ($this->input->post('type') != '') ? $this->input->post('type') : 'user',
                     'waba_access' => $this->input->post('waba_access') == 'on' ? 1 : 0,
-                    'crm_lead_access' => $this->input->post('crm_lead_access') == 'on' ? 1 : 0,
+                    'crm_lead_access' => $this->input->post('crm_lead_access') == 'on' ? '1' : '0',
                 ];
+                $password = $this->input->post('password');
+                
+                if(empty($user_id)){
+                    $user_id = $this->check_deleted_user($this->input->post('email'));
+                    if(!empty($user_id)){
+                        $update_array['password'] = $this->encrypt->encode($password);
+                        $update_array['is_deleted'] = 0;
+                    }
+                }
                 if (is_numeric($user_id)) {
+                    $where = array('id' => $user_id);
                     $this->CMS_model->update_record(tbl_users, $where, $update_array);
                     $this->session->set_flashdata('success_msg', 'User updated successfully !');
                 } else {
-                    $password = $this->input->post('password');
+                    
                     $update_array['password'] = $this->encrypt->encode($password);
                     $update_array['created_at'] = date('Y-m-d H:i:s');
                     $this->CMS_model->insert_data(tbl_users, $update_array);

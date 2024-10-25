@@ -342,9 +342,10 @@ $(document).find('#query_time').daterangepicker({
         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
         'This Month': [moment().startOf('month'), moment().endOf('month')],
         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-    },
+    }
+}).on('apply.daterangepicker', function(ev, picker) {
+    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
 });
-
 function view_more_message(id) {
     $.ajax({
         type: "GET",
@@ -443,10 +444,12 @@ let previousRequest;
 //let loadContactsInterval;
 let loadChatInterval;
 let loadContactsInterval = setInterval(function (e) {
-    let search = document.querySelector('#search-contact').value;
-    let listedContact = document.querySelector('#listed_contact').value;
-    let filterData = {'limit' : listedContact};
-    loadContacts(filterData);
+    let selListedContact = document.querySelector('#listed_contact');
+    if(selListedContact){
+        let listedContact = selListedContact.value;
+        let filterData = {'limit' : listedContact};
+        loadContacts(filterData);
+    }
 }, 20000);
 
 

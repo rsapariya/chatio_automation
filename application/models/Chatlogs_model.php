@@ -190,8 +190,8 @@ class Chatlogs_model extends CI_Model
         //$unread_message = 'select count(um.id) from '.tbl_chat_logs.' as um where um.phone_number = l.phone_number AND um.user_id = l.user_id AND um.from_user=1 AND (um.message_status IS NULL OR um.message_status != "read") ORDER BY um.id DESC';
         
 	//$this->db->select('c.id,l.phone_number, l.from_profile_name, MAX(l.created) as created, c.name, ('.$last_msg.') as message, ('.$message_type.') as message_type, ('.$unread_message.') as unread_message', false);
-        $this->db->select('c.id,l.phone_number, l.from_profile_name, MAX(l.created) as created, c.name', false);
-        $this->db->select('COUNT(CASE WHEN l.from_user = 1 AND l.user_id = c.user_id AND (l.message_status IS NULL OR l.message_status != "read") THEN 1 END) AS unread_message');
+        $this->db->select('c.id,l.phone_number, l.from_profile_name, MAX(l.created) as created, c.name');
+        $this->db->select('COUNT(DISTINCT CASE WHEN l.from_user = 1 AND l.user_id = "'.$user_id.'" AND (l.message_status IS NULL OR l.message_status != "read") THEN l.id END) AS unread_message', false);
         if ($this->session->userdata('type') == 'member') {
             $this->db->join(tbl_assigned_member . ' a', 'a.assigned_to = l.phone_number');
             $this->db->where('a.member_id =', $member_id);

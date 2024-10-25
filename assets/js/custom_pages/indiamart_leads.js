@@ -164,8 +164,9 @@ var indiamart_list_dttble = $('#indiamart_list_dttble').DataTable({
 
 $(document).find('#query_time').daterangepicker({
     opens: 'left',
-    startDate: moment().subtract(6, 'days'),
-    endDate: moment(),
+    autoUpdateInput: false,
+    //startDate: moment().subtract(6, 'days'),
+    //endDate: moment(),
     showDropdowns: true,
     ranges: {
         'Today': [moment(), moment()],
@@ -174,12 +175,15 @@ $(document).find('#query_time').daterangepicker({
         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
         'This Month': [moment().startOf('month'), moment().endOf('month')],
         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-    },
+    }
+}).on('apply.daterangepicker', function(ev, picker) {
+    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
 });
 $(document).find('.filter-indiamart-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('#indiamart_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.clear-indiamart-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('select#city').val('').trigger('change');
@@ -187,6 +191,7 @@ $(document).find('.clear-indiamart-list').on('click', function (e) {
     $(document).find('#query_time').val('');
     $(document).find('#indiamart_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.generate-indiamart-excel-response-list').on('click', function (e) {
     e.preventDefault();
     var city = $(document).find('select#city :selected').val();
@@ -376,10 +381,12 @@ var tradeindia_list_dttble = $('#tradeindia_list_dttble').DataTable({
         "selector": 'td:first-child'
     }
 });
+
 $(document).find('#tiquery_time').daterangepicker({
     opens: 'left',
-    startDate: moment().subtract(6, 'days'),
-    endDate: moment(),
+    autoUpdateInput: false,
+    //startDate: moment().subtract(6, 'days'),
+    //endDate: moment(),
     showDropdowns: true,
     ranges: {
         'Today': [moment(), moment()],
@@ -388,18 +395,23 @@ $(document).find('#tiquery_time').daterangepicker({
         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
         'This Month': [moment().startOf('month'), moment().endOf('month')],
         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-    },
+    }
+}).on('apply.daterangepicker', function(ev, picker) {
+    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
 });
+
 $(document).find('.filter-tradeindia-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('#tradeindia_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.clear-tradeindia-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('select#ticity').val('').trigger('change');
     $(document).find('#tiquery_time').val('');
     $(document).find('#tradeindia_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.generate-tradeindia-excel-response-list').on('click', function (e) {
     e.preventDefault();
     var city = $(document).find('select#ticity :selected').val();
@@ -412,7 +424,6 @@ $(document).find('.generate-tradeindia-excel-response-list').on('click', functio
     }
     generate_lead_excel(data);
 });
-
 
 var exportersindia_list_dttble = $('#exportersindia_list_dttble').DataTable({
     "processing": true,
@@ -561,10 +572,12 @@ var exportersindia_list_dttble = $('#exportersindia_list_dttble').DataTable({
         "selector": 'td:first-child'
     }
 });
+
 $(document).find('#eiquery_time').daterangepicker({
     opens: 'left',
-    startDate: moment().subtract(6, 'days'),
-    endDate: moment(),
+    autoUpdateInput: false,
+    //startDate: moment().subtract(6, 'days'),
+    //endDate: moment(),
     showDropdowns: true,
     ranges: {
         'Today': [moment(), moment()],
@@ -573,18 +586,23 @@ $(document).find('#eiquery_time').daterangepicker({
         'Last 30 Days': [moment().subtract(29, 'days'), moment()],
         'This Month': [moment().startOf('month'), moment().endOf('month')],
         'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-    },
+    }
+}).on('apply.daterangepicker', function(ev, picker) {
+    $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
 });
+
 $('#filter-exportersindia-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('#exportersindia_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.clear-exportersindia-list').on('click', function (e) {
     e.preventDefault();
     $(document).find('select#eicity').val('').trigger('change');
     $(document).find('#eiquery_time').val('');
     $(document).find('#exportersindia_list_dttble').DataTable().ajax.reload(null, false);
 });
+
 $(document).find('.generate-exportersindia-excel-response-list').on('click', function (e) {
     e.preventDefault();
     var city = $(document).find('select#eicity :selected').val();
@@ -597,7 +615,6 @@ $(document).find('.generate-exportersindia-excel-response-list').on('click', fun
     }
     generate_lead_excel(data);
 });
-
 
 
 var crm_message_logs_dttble = $('#crm_message_logs_dttble').DataTable({
@@ -723,6 +740,7 @@ var crm_message_logs_dttble = $('#crm_message_logs_dttble').DataTable({
     ],
     drawCallback: function () {}
 });
+
 function view_message(id){
     $.ajax({
         type: "GET",
@@ -738,6 +756,7 @@ function view_message(id){
         }
     });
 }
+
 function view_subject(id){
     $.ajax({
         type: "GET",
@@ -753,9 +772,6 @@ function view_subject(id){
         }
     });
 }
-
-
-
 
 
 /*var indiamart_list_dttble = $('#indiamart_list_dttble').DataTable({

@@ -9,7 +9,7 @@ class Campaigns_model extends CI_Model {
     function get($count = null) {
         $start = $this->input->get('start');
         $columns = ['c.id', 'c.campaign_name', 't.name', 'c.created', 'c.status'];
-        $contacts = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id';
+        /*$contacts = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id';
         $sent_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status !="failed"';
         $failed_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status="failed"';
         $deliver_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status="delivered"';
@@ -17,12 +17,19 @@ class Campaigns_model extends CI_Model {
         $accepted_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status="accepted"';
 
         $select = 'c.id,c.campaign_name,t.name,c.created,c.status, (' . $contacts . ') as contacts, (' . $accepted_messages . ') as accepted_messages, (' . $failed_messages . ') as failed_messages, (' . $deliver_messages . ') as delivered_messages, (' . $read_messages . ') as read_messages';
-        $this->db->select($select, false);
+        $this->db->select($select, false);*/
+        
+        $this->db->select('c.id, c.campaign_name, t.name, c.created, c.status, 
+                   COUNT(cq.campaign_id) AS contacts,
+                   SUM(CASE WHEN cq.message_status = "accepted" THEN 1 ELSE 0 END) AS accepted_messages,
+                   SUM(CASE WHEN cq.message_status = "failed" THEN 1 ELSE 0 END) AS failed_messages,
+                   SUM(CASE WHEN cq.message_status = "delivered" THEN 1 ELSE 0 END) AS delivered_messages,
+                   SUM(CASE WHEN cq.message_status = "read" THEN 1 ELSE 0 END) AS read_messages');
         $this->db->join(tbl_templates . ' t', 't.id=c.template_id');
-        //$this->db->join(tbl_campaign_queue . ' cq', 'cq.campaign_id=c.id');
+        $this->db->join('campaign_queue cq', 'cq.campaign_id = c.id', 'left');
         $keyword = $this->input->get('search');
         if (!empty($keyword['value'])) {
-            $this->db->having('c.campaign_name LIKE "%' . $keyword['value'] . '%" OR c.status LIKE "%' . $keyword['value'] . '%"', NULL);
+            $this->db->having('c.campaign_name LIKE "%' . $keyword['value'] . '%" OR c.status LIKE "%' . $keyword['value'] . '%" OR t.name LIKE "%' . $keyword['value'] . '%"', NULL);
         }
         if ($this->session->userdata('type') == 'user') {
             $user_id = $this->session->userdata('id');
@@ -31,7 +38,7 @@ class Campaigns_model extends CI_Model {
             $user_id = $this->session->userdata('added_by');
         }
         $this->db->where('c.user_id', $user_id);
-
+        $this->db->group_by('c.id');
         $order = $this->input->get('order');
         if (!empty($order)) {
             $this->db->order_by($columns[$this->input->get('order')[0]['column']], $this->input->get('order')[0]['dir']);
@@ -72,7 +79,7 @@ class Campaigns_model extends CI_Model {
     }
 
     public function campaign_details($campaign_id) {
-        $start = $this->input->get('start');
+        /*$start = $this->input->get('start');
         $columns = ['c.id', 'c.campaign_name', 't.name', 'c.created', 'c.status'];
         $contacts = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id';
         $sent_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status !="failed"';
@@ -82,8 +89,18 @@ class Campaigns_model extends CI_Model {
         $read_messages = 'select count(*) from ' . tbl_campaign_queue . ' as cq where cq.campaign_id = c.id AND cq.message_status="read"';
         $select = 'c.id,c.campaign_name,t.name,c.created,c.status, (' . $contacts . ') as contacts, (' . $sent_messages . ') as sent_messages, (' . $failed_messages . ') as failed_messages, (' . $delivered_messages . ') as delivered_messages, (' . $read_messages . ') as read_messages,  (' . $accepted_messages . ') as accepted_messages';
         $this->db->select($select, false);
+        */
+        $this->db->select('c.id, c.campaign_name, t.name, c.created, c.status, 
+                   COUNT(cq.id) AS contacts, 
+                   COUNT(CASE WHEN cq.message_status != "failed" THEN 1 END) AS sent_messages, 
+                   COUNT(CASE WHEN cq.message_status = "failed" THEN 1 END) AS failed_messages, 
+                   COUNT(CASE WHEN cq.message_status = "delivered" THEN 1 END) AS delivered_messages, 
+                   COUNT(CASE WHEN cq.message_status = "read" THEN 1 END) AS read_messages, 
+                   COUNT(CASE WHEN cq.message_status = "accepted" THEN 1 END) AS accepted_messages');
         $this->db->join(tbl_templates . ' t', 't.id=c.template_id');
+        $this->db->join('campaign_queue cq', 'cq.campaign_id = c.id', 'left');
         $this->db->where('c.id', $campaign_id);
+        $this->db->group_by('c.id, c.campaign_name, t.name, c.created, c.status');
         $res_data = $this->db->get(tbl_campaigns . ' c')->row_array();
         return $res_data;
     }
