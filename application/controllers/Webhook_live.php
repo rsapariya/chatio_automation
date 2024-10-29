@@ -123,6 +123,7 @@ class Webhook_live extends CI_Controller {
                             $wh_response['message_status'] = $status;
                         } else if ($status == 'failed') {
                             $wh_response['message_status'] = $status;
+                            $wh_response['response'] = $response;
                         }
                         //file_put_contents('Z_response_data.txt', 'update =>'.date('Y-m-d H:i:s').' id=>'.$response_exists['id'].' status=>'.$status.' time=>'.date('Y-m-d H:i:s', $timestamp).PHP_EOL, FILE_APPEND | LOCK_EX);
                         $this->CMS_model->update_record(tbl_wh_response, array('id' => $response_exists['id']), $wh_response);

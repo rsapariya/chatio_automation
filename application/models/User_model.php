@@ -12,13 +12,13 @@ class User_model extends CI_Model {
      */
     public function get_all_users($count = null, $wher = null) {
         $start = $this->input->get('start');
-        $columns = ['u.id', 'u.name', 'u.email', 'u.phone_number_full', 'u.type', 'u.created_at', 'u.is_deleted'];
-        $this->db->select('u.id,@a:=@a+1 AS test_id,u.name,u.phone_number,u.phone_number_full,DATE_FORMAT(u.created_at,"%d %b %Y <br> %l:%i %p") AS created_at,u.is_deleted,u.email,u.is_blocked,u.type', false);
+        $columns = ['u.id', 'u.name', 'u.email', 'u.phone_number_full', 'u.type', 'u.status', 'u.created_at', 'u.is_deleted'];
+        $this->db->select('u.id,@a:=@a+1 AS test_id,u.name,u.phone_number,u.phone_number_full,DATE_FORMAT(u.created_at,"%d %b %Y <br> %l:%i %p") AS created_at,u.is_deleted,u.email,u.is_blocked,u.type,u.status', false);
         $this->db->where(['u.is_deleted' => 0]);
         $this->db->where_in('u.type', array('admin', 'user'));
         $keyword = $this->input->get('search');
         if (!empty($keyword['value'])) {
-            $this->db->having('u.email LIKE "%' . $keyword['value'] . '%" OR u.name LIKE "%' . $keyword['value'] . '%" OR u.type LIKE "%' . $keyword['value'] . '%"  OR u.phone_number LIKE "%' . $keyword['value'] . '%" OR u.phone_number_full LIKE "%' . $keyword['value'] . '%" OR created_at LIKE "%' . $keyword['value'] . '%"', NULL);
+            $this->db->having('u.email LIKE "%' . $keyword['value'] . '%" OR u.name LIKE "%' . $keyword['value'] . '%" OR u.type LIKE "%' . $keyword['value'] . '%"  OR u.status LIKE "%' . $keyword['value'] . '%" OR u.phone_number LIKE "%' . $keyword['value'] . '%" OR u.phone_number_full LIKE "%' . $keyword['value'] . '%" OR created_at LIKE "%' . $keyword['value'] . '%"', NULL);
         }
         $order = $this->input->get('order');
         if(!empty($order)){

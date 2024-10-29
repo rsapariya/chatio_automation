@@ -2646,6 +2646,10 @@ div.dataTables_wrapper div.dataTables_paginate {
 .filepond--root .filepond--credits {
     display: none;
 }
+.campaign .nav{ justify-content: space-around;}
+.campaign .nav .nav-item .nav-link{ display: grid; }
+
+
 .campaign .widget-t-sales-widget .media .icon,
 .widget-t-sales-widget .media .counter {
     height: 55px;

@@ -414,11 +414,11 @@ class Cron extends CI_Controller {
         if (!empty($campaign)) {
             foreach ($campaign as $c) {
                 $campaign_info = $this->Campaigns_model->campaign_details($c['id']);
-
+                
                 if (!empty($campaign_info)) {
                     $total = $campaign_info['contacts'];
 
-                    $sent = $campaign_info['sent_messages'];
+                    $sent = $campaign_info['is_sent'];
                     $delivered = $campaign_info['delivered_messages'];
                     $read = $campaign_info['read_messages'];
                     $failed = $campaign_info['failed_messages'];
@@ -427,7 +427,7 @@ class Cron extends CI_Controller {
 
                     if ($total == $failed) {
                         $status = 'failed';
-                    } else if ($total == $delivered || $total == $read || $total == $accepted || $total == ($failed + $delivered + $read + $accepted)) {
+                    } else if ($total == $delivered || $total == $read || $total == $accepted || $total == ($failed + $delivered + $read + $accepted) || $total == ($failed + $accepted)) {
                         $status = 'delivered';
                     }
                     if (!empty($status)) {
@@ -551,6 +551,7 @@ class Cron extends CI_Controller {
                             'sent_time' => $r['sent_time'],
                             'deliver_time' => $r['deliver_time'],
                             'read_time' => $r['read_time'],
+                            'response' => $r['response'],
                         );
                     }
                     $this->db->delete(tbl_wh_response, array('message_id' => $message_id));

@@ -90,7 +90,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-8 col-12">
+                            <div class="col-lg-8 col-12 ">
                                 <label >Access</label><br/>
                                 <div class="form-group mb-4">    
                                     <div class="form-check form-switch form-check-inline">
@@ -105,6 +105,44 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-lg-8 col-12 mb-4">
+                                <label >License</label><br/>
+                                <div class="row">
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label for="license_start">License Start</label>
+                                            <input id="license_start" name='license_start' value="<?php echo isset($user_datas['license_start']) ? date('d-m-Y', strtotime(getServerTimeZone($user_datas['license_start']))) : '' ?>" class="form-control flatpickr" type="text" placeholder="Select Start Date">
+                                            <div class="valid-feedback"></div>
+                                            <div class="invalid-feedback">Please fill the License Start</div>
+                                        </div> 
+                                    </div>
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label for="license_end">License End</label>
+                                            <input id="license_end" name='license_end' value="<?php echo isset($user_datas['license_end']) ? date('d-m-Y', strtotime(getServerTimeZone($user_datas['license_end']))) : '' ?>" class="form-control flatpickr" type="text" placeholder="Select End Date">
+                                            <div class="valid-feedback"></div>
+                                            <div class="invalid-feedback">Please fill the License End</div>
+                                        </div> 
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-8 col-12">
+                                <div class="form-group mb-4">
+                                    <label for="hPhoneNo">Status</label><br/>
+                                    <div class="form-check form-check-primary form-check-inline">
+                                        <input type="radio" id="status2 "name='status' value='active'  <?php echo isset($user_datas['status']) && $user_datas['status'] == 'active' ? 'checked="checked"' : 'checked="checked"' ?> class="form-check-input" required>
+                                        <label class="form-check-label" for="status2">
+                                            Active
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-primary form-check-inline">
+                                        <input type="radio" id="status1" name='status' value='inactive' <?php echo isset($user_datas['status']) && $user_datas['status'] == 'inactive' ? 'checked="checked"' : '' ?>class="form-check-input" required>
+                                        <label class="form-check-label" for="status1">
+                                            Inactive
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-lg-8 col-12">
                                 <input type="submit" name="Save" class="mt-4 mb-4 btn btn-primary">
                             </div>
@@ -115,4 +153,8 @@
         </div>
     </div>
 </div>
+<script>
+    let licenseStart = '<?php echo isset($user_datas["license_start"]) ? date("d-m-Y", strtotime(getServerTimeZone($user_datas["license_start"]))) : '' ?>';
+    let licenseEnd = '<?php echo isset($user_datas["license_end"]) ? date("d-m-Y", strtotime(getServerTimeZone($user_datas["license_end"]))) : '' ?>';
+</script>
 <script src="<?php echo DEFAULT_ADMIN_JS_PATH; ?>custom_pages/users.js?t=<?php echo date('YmdHis') ?>"></script>

@@ -1724,20 +1724,28 @@ function getMessageDetails($user_cread) {
     $ci->load->model('CMS_model');
 
     if (!empty($user_cread)) {
-        $endDateTime = date('Y-m-d').' 18:30:00';
+        $granularity = isset($user_cread['granularity']) && !empty($user_cread['granularity']) ? $user_cread['granularity'] : 'DAY';
         
-        $current_date = new DateTime($endDateTime);
-        $current_date->modify('-30 days');
-        $startDateTime = $current_date->format('Y-m-d H:i:s');
+        if(isset($user_cread['start_date'])&& !empty($user_cread['start_date']) && isset($user_cread['end_date'])&& !empty($user_cread['end_date'])){
+            $start = $user_cread['start_date'];
+            $end = $user_cread['end_date'];
+        }else{
+            $endDateTime = date('Y-m-d').' 18:30:00';
+            
+            $current_date = new DateTime($endDateTime);
+            $current_date->modify('-30 days');
+            $startDateTime = $current_date->format('Y-m-d H:i:s');
+            
+            $start = strtotime($startDateTime);
+            $end = strtotime($endDateTime);
+        }
         
-        $start = strtotime($startDateTime);
-        $end = strtotime($endDateTime);
         
         $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
         $permanent_access_token = isset($user_cread['permanent_access_token']) && !empty($user_cread['permanent_access_token']) ? $user_cread['permanent_access_token'] : '';
 
         if (!empty($business_account_id) && !empty($permanent_access_token)) {
-            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=analytics.start(".$start.").end(".$end.").granularity(DAY)&access_token=" . $permanent_access_token;
+            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=analytics.start(".$start.").end(".$end.").granularity(".$granularity.")&access_token=" . $permanent_access_token;
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1770,20 +1778,28 @@ function getConversionCost($user_cread) {
     $ci->load->model('CMS_model');
 
     if (!empty($user_cread)) {
-        $endDateTime = date('Y-m-d').' 18:30:00';
+        $granularity = isset($user_cread['granularity']) && !empty($user_cread['granularity']) ? $user_cread['granularity'] : 'DAILY';
         
-        $current_date = new DateTime($endDateTime);
-        $current_date->modify('-60 days');
-        $startDateTime = $current_date->format('Y-m-d H:i:s');
-        
-        $start = strtotime($startDateTime);
-        $end = strtotime($endDateTime);
+        if(isset($user_cread['start_date'])&& !empty($user_cread['start_date']) && isset($user_cread['end_date'])&& !empty($user_cread['end_date'])){
+            $start = $user_cread['start_date'];
+            $end = $user_cread['end_date'];
+        }else{
+            $endDateTime = date('Y-m-d').' 18:30:00';
+            
+            $current_date = new DateTime($endDateTime);
+            $current_date->modify('-60 days');
+            $startDateTime = $current_date->format('Y-m-d H:i:s');
+            
+            $start = strtotime($startDateTime);
+            $end = strtotime($endDateTime);
+        }
         
         $business_account_id = isset($user_cread['business_account_id']) && !empty($user_cread['business_account_id']) ? $user_cread['business_account_id'] : '';
         $permanent_access_token = isset($user_cread['permanent_access_token']) && !empty($user_cread['permanent_access_token']) ? $user_cread['permanent_access_token'] : '';
 
         if (!empty($business_account_id) && !empty($permanent_access_token)) {
-            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=conversation_analytics.start(".$start.").end(".$end.").granularity(DAILY)&access_token=" . $permanent_access_token;
+            $url = "https://graph.facebook.com/v20.0/" . $business_account_id . "?fields=conversation_analytics.start(".$start.").end(".$end.").granularity(".$granularity.")&access_token=" . $permanent_access_token;
+            
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $ch_result = curl_exec($ch);
@@ -1809,7 +1825,6 @@ function getConversionCost($user_cread) {
         redirect('/');
     }
 }
-
 
 function get_json_api_data($message = '', $business_account_id = '') {
     $ci = &get_instance();

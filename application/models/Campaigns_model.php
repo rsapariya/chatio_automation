@@ -92,6 +92,7 @@ class Campaigns_model extends CI_Model {
         */
         $this->db->select('c.id, c.campaign_name, t.name, c.created, c.status, 
                    COUNT(cq.id) AS contacts, 
+                   COUNT(IF(cq.is_sent = 1, 1, NULL)) AS is_sent,
                    COUNT(CASE WHEN cq.message_status != "failed" THEN 1 END) AS sent_messages, 
                    COUNT(CASE WHEN cq.message_status = "failed" THEN 1 END) AS failed_messages, 
                    COUNT(CASE WHEN cq.message_status = "delivered" THEN 1 END) AS delivered_messages, 
@@ -110,9 +111,10 @@ class Campaigns_model extends CI_Model {
         $start = $this->input->get('start');
         $columns = ['c.created', 'cn.name', 'cq.contact_number', 'cq.is_sent', 'cq.sent_time', 'cq.message_status', 'cq.deliver_time', 'cq.read_time'];
 
-        $this->db->select('cq.*,c.campaign_name,c.created,c.campaign_message,cn.name', false);
+        $this->db->select('cq.*,c.campaign_name,c.created,c.campaign_message,cn.name,cq.response,cl.error_message', false);
         $this->db->join(tbl_campaigns . ' c', 'c.id = cq.campaign_id');
         $this->db->join(tbl_clients . ' cn', 'cn.phone_number_full = cq.contact_number', 'left');
+        $this->db->join(tbl_chat_logs . ' cl', 'cl.message_id = cq.message_id', 'left');
         $keyword = $this->input->post('search');
         $campaign_id = $this->input->post('campaign_id');
 
@@ -123,7 +125,7 @@ class Campaigns_model extends CI_Model {
             $this->db->where('cq.campaign_id', base64_decode($campaign_id));
         }
 
-        $this->db->group_by('cq.message_id');
+        $this->db->group_by('cq.contact_number');
 
         $order = $this->input->post('order');
         if (!empty($order)) {
@@ -156,6 +158,22 @@ class Campaigns_model extends CI_Model {
         $this->db->where('cq.campaign_id', $campaign_id);
         $this->db->where('cn.user_id', $user_id);
         $this->db->where('cq.message_status', 'failed');
+        $res_data = $this->db->get(tbl_campaign_queue . ' cq')->result_array();
+        return $res_data;
+    }
+    
+    public function get_recampaign_contact($campaign_id, $campaign_for) {
+        $user_id = $this->session->userdata('id');
+        $this->db->select('cn.*', false);
+        $this->db->join(tbl_clients . ' cn', 'cn.phone_number_full = cq.contact_number');
+        if($campaign_for == 'read_not_replied'){
+            $this->db->join(tbl_chat_logs . ' cl', 'cl.reply_message_id = cq.message_id', 'left');
+            $this->db->where('cl.message IS NULL');
+        }
+        $this->db->where('cq.campaign_id', $campaign_id);
+        $this->db->where('cq.message_status', 'read');
+        $this->db->where('cn.is_subscribed', 1);
+        $this->db->group_by('cq.contact_number');
         $res_data = $this->db->get(tbl_campaign_queue . ' cq')->result_array();
         return $res_data;
     }

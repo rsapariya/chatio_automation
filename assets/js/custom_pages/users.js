@@ -52,6 +52,19 @@ var users_dttble = $('#users_dttble').DataTable({
             }
         },
         {
+            data: "status",
+            visible: true,
+            render: function (data, type, full, meta) {
+                var status = '';
+                if (full.status == 'active') {
+                    status = '<a href="javascript:void(0);" class="change_user_status" data-id="'+full.id+'" data-status="active"><span class="badge badge-success"">Active</span></a>';
+                } else {
+                    status = '<a href="javascript:void(0);" class="change_user_status" data-id="'+full.id+'" data-status="inactive"><span class="badge badge-danger"">Inactive</span></a>';
+                }
+                return status;
+            }
+        },
+        {
             data: "created_at",
             visible: true,
             searchable: false,
@@ -67,7 +80,6 @@ var users_dttble = $('#users_dttble').DataTable({
                 action += '<li><a href="' + base_url + 'users/edit/' + btoa(full.id) + '" class="btn btn-outline-primary btn-icon " data-toggle="tooltip" data-placement="top" data-original-title="Edit" title=""><i class="fa fa-pencil-alt"></i></a></li>';
                 action += '<li class="ml-3"><a href="javascript:void(0)" onclick="delete_users(' + full.id + ')"  title="" class="btn btn-outline-danger btn-icon " data-toggle="tooltip" data-placement="top" data-original-title="Delete"><i class="fa fa-trash"></i></a></li>';
                 if (full.type == 'user') {
-                    action += '<li class="ml-3"><a href="' + base_url + 'users/clients/' + btoa(full.id) + '" title="" class="btn btn-outline-warning btn-icon " data-toggle="tooltip" data-placement="top" data-original-title="Clients"><i class="fa fa-users"></i></a></li>';
                     action += '<li class="ml-3"><a href="' + base_url + 'users/settings/' + btoa(full.id) + '" title="" class="btn btn-outline-secondary btn-icon " data-toggle="tooltip" data-placement="top" data-original-title="Settings"><i class="fa fa-gear"></i></a></li>';
                 }
                 action += '</ul></td>';
@@ -111,6 +123,34 @@ jQuery(document).on('click', '.hide_show_password', function(e){
     }
 });
 
+jQuery(document).on('click', '.change_user_status', function(e){
+    let status = $(this).data('status');
+    let id = $(this).data('id');
+    jQuery.ajax({
+        type: "POST",
+        data: {'id' : id,'status' : status},
+        url: base_url + 'users/change_user_tatus',
+        success: function (response) {
+            var json = jQuery.parseJSON(response);
+            if (!json.status) {
+                Swal.fire({
+                    title: "Error!",
+                    text: 'Something went wrong',
+                    icon: "error",
+                    timer: 2000
+                });
+            } else {
+                Swal.fire({
+                    title: "Success!",
+                    text: "Status has been changed!",
+                    icon: "success",
+                    timer: 2000
+                });
+                users_dttble.ajax.reload(null, false);
+            }
+        }
+    });
+});
 
 window.addEventListener('load', function () {
     // Fetch all the forms we want to apply custom Bootstrap validation styles to
@@ -134,6 +174,16 @@ window.addEventListener('load', function () {
 
 }, false);
 
+$(document).ready(function () {
+    flatpickr(document.getElementById('license_start'), { 
+        dateFormat: "d-m-Y",
+        defaultDate: licenseStart
+    });
+    flatpickr(document.getElementById('license_end'), {  
+        dateFormat: "d-m-Y",
+        defaultDate: licenseEnd
+    });
+});
 
 
 function delete_users(id) {

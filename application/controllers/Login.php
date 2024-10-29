@@ -37,29 +37,44 @@ class Login extends CI_Controller {
                 $user_detail = $this->Admin_model->get_user($email, $password);
                 if (count($user_detail) == 1) {
                     $user = $user_detail[0];
+                    
                     if ($user['is_blocked'] != 1) {
-                        $login_update = array(
-                            'last_ip' => $_SERVER['REMOTE_ADDR'],
-                            'last_login' => date('Y-m-d H:i:s')
-                        );
-                        $this->CMS_model->update_record(tbl_users, array('id' => $user['id']), $login_update);
-
-                        $profile_url = '';
-                        if ($user['type'] == 'user') {
-                            $profile_url = $this->get_user_wa_profile($user['id']);
-                        }
-                        if ($user['type'] == 'member') {
+                        $login = 1;
+                        if ($user['type'] == 'user' && $user['status'] == 'inactive'){
+                            $login = 0;
+                        }else if ($user['type'] == 'member'){
                             $userInfo = $this->CMS_model->get_result(tbl_users, array('id' => $user['added_by']), '', 1);
-                            $user['waba_access'] = !empty($userInfo) ? $userInfo['waba_access'] : $user['waba_access'];
-                            $time_zone = $this->CMS_model->get_result(tbl_user_settings, array('user_id' => $user['added_by']), '', 1);
-                            $user['time_zone'] = !empty($time_zone) ? $time_zone['time_zone'] : '';
+                            if($userInfo['status'] == 'inactive'){
+                                $login = 0;
+                            }
                         }
-                        
-                        $user['wa_profile_image_url'] = $profile_url;
-                        unset($user['password']);
-                        $session_array = $user;
-                        $this->session->set_userdata($session_array);
-                        redirect('dashboard', $this->data);
+                        if(empty($login)){
+                            $this->session->set_flashdata('error_msg', 'Your License is not active.');
+                            redirect('login');
+                        }else{
+                            $login_update = array(
+                                'last_ip' => $_SERVER['REMOTE_ADDR'],
+                                'last_login' => date('Y-m-d H:i:s')
+                            );
+                            $this->CMS_model->update_record(tbl_users, array('id' => $user['id']), $login_update);
+
+                            $profile_url = '';
+                            if ($user['type'] == 'user') {
+                                $profile_url = $this->get_user_wa_profile($user['id']);
+                            }
+                            if ($user['type'] == 'member') {
+                                $userInfo = $this->CMS_model->get_result(tbl_users, array('id' => $user['added_by']), '', 1);
+                                $user['waba_access'] = !empty($userInfo) ? $userInfo['waba_access'] : $user['waba_access'];
+                                $time_zone = $this->CMS_model->get_result(tbl_user_settings, array('user_id' => $user['added_by']), '', 1);
+                                $user['time_zone'] = !empty($time_zone) ? $time_zone['time_zone'] : '';
+                            }
+
+                            $user['wa_profile_image_url'] = $profile_url;
+                            unset($user['password']);
+                            $session_array = $user;
+                            $this->session->set_userdata($session_array);
+                            redirect('dashboard', $this->data);
+                        }
                     } else {
                         $this->session->set_flashdata('error_msg', 'Your account is blocked.');
                         redirect('login');

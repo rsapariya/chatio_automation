@@ -363,6 +363,63 @@ $(document).on('click', '#btn-create-failed-campaign', function(e){
     });
 });
 
+$(document).on('change', '.recampaign_for', function(e){
+    e.preventDefault();
+    let contactCounter = document.querySelector('#contact-counter');
+    let recampaignFor = $(this).val();
+    
+    var campaign_id = document.querySelector('#campaign_id').value;
+    jQuery.ajax({
+        type: "POST",
+        url: base_url + 'campaigns/get_contact_for_recampaign/',
+        data: {'campaign_for' : recampaignFor, 'campaign_id' : campaign_id},
+        success: function (response) {
+            let json = JSON.parse(response);
+            let btnCreateRecampaign = document.querySelector('#btn-create-recampaign');
+            
+            if(contactCounter){
+                contactCounter.innerHTML = '<label>Total Contacts : '+json.contacts+'</label>';
+            }
+            if(parseInt(json.contacts) == 0){
+                new swal("Error!", 'No contact for Recampaign!', "error");
+                btnCreateRecampaign.disabled= true;
+            }else{
+                btnCreateRecampaign.disabled= false;
+            }
+        }
+    });
+});
+
+$(document).on('click', '#btn-create-recampaign', function(e){
+    let campaignBtn = document.querySelector('#btn-create-recampaign');
+    campaignBtn.innerHTML = '<span><i class="fa fa-pulse fa-spinner"></i> Creating..</span>';
+    campaignBtn.disabled = true;
+    let data = jQuery("#create_recampaign_form").serialize();
+    let userMessage = document.querySelector('.user-message');
+    userMessage.innerHTML = '';
+    jQuery.ajax({
+        type: "POST",
+        url: base_url + "campaigns/save_recampaign",
+        data: data,
+        success: function (response) {
+            let json = JSON.parse(response);
+            campaignBtn.innerHTML = 'Create Campaign';
+            if(json.error){
+                campaignBtn.disabled = false;
+                userMessage.innerHTML = '<div class="alert alert-light-danger alert-dismissible fade show border-0 mb-4" role="alert">'
+                                +'<button type="button" class="btn-close text-danger" data-bs-dismiss="alert" aria-label="Close">x</button> '+json.error+' </button></div>';
+            }else{
+                userMessage.innerHTML = '<div class="alert alert-light-success alert-dismissible fade show border-0 mb-4" role="alert">'
+                                +'<button type="button" class="btn-close text-success" data-bs-dismiss="alert" aria-label="Close">x</button> '+json.success+' </button></div>';
+                
+                setTimeout(function(){
+                     window.location.href = base_url + "campaigns";
+                }, 1000);
+            }
+        }
+    });
+});
+
 var campaign_details_dttble = $('#campaign_details_dttble').DataTable({
     "processing": true,
     "serverSide": true,
@@ -376,7 +433,7 @@ var campaign_details_dttble = $('#campaign_details_dttble').DataTable({
         },
         "info": "Showing page _PAGE_ of _PAGES_"
     },
-    "order": [[2, "desc"]],
+    "order": [[0, "desc"]],
     "dom": 'lftrip',
     "buttons": [
         {extend: 'excel', className: 'btn btn-ouline-success'}
@@ -405,7 +462,7 @@ var campaign_details_dttble = $('#campaign_details_dttble').DataTable({
         },
         {
             data: "contact_number",
-            visible: true,
+            visible: true
         },
         {
             data: "is_sent",
@@ -418,7 +475,7 @@ var campaign_details_dttble = $('#campaign_details_dttble').DataTable({
         },
         {
             data: "sent_time",
-            visible: true,
+            visible: true
         },
         {
             data: "message_status",
@@ -451,6 +508,22 @@ var campaign_details_dttble = $('#campaign_details_dttble').DataTable({
                     }
                 }
                 return renderStatus
+            }
+        },
+        {
+            data: "error_message",
+            visible: true,
+            render: function (data, type, full, meta) {
+                /*let renderStatus = '';
+                if(full.message_status != ''){
+                    if(full.message_status == 'delivered'){
+                         renderStatus = full.deliver_time;
+                    }
+                    if(full.message_status == 'read'){
+                         renderStatus = full.read_time;
+                    }
+                }*/
+                return full.error_message;
             }
         }
     ],

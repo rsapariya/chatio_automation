@@ -345,6 +345,223 @@
 </span></pre>
                                                     </div>
                                             </div>
+                                            
+                                            
+                                            
+                                            <?php
+                                            
+                                            $endDateTime = date('Y-m-d').' 18:30:00';
+            
+                                            $current_date = new DateTime($endDateTime);
+                                            $current_date->modify('-30 days');
+                                            $startDateTime = $current_date->format('Y-m-d H:i:s');
+
+                                            $start = strtotime($startDateTime);
+                                            $end = strtotime($endDateTime);
+                                            
+                                            
+                                            ?>
+                                            <div class="mt-5">
+                                                   <h2 id="message-details">WhatsApp Message Details & Status</h2>
+                                                   <p>It provides the number and type of messages sent and delivered by the phone numbers associated with a specific WABA — for conversation.</p>
+                                                   <table class="table table-bordered">
+                                                       <thead>
+                                                       <tr>
+                                                           <th>Parameters</th>
+                                                            <th>Description</th>
+                                                       </tr>
+                                                       </thead>
+                                                       <tbody>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">start</span><br/>
+                                                                   <p>type: UNIX Timestamp</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The start date for the date range you are retrieving data for.</p>
+                                                               </td>
+                                                           </tr>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">end</span><br/>
+                                                                   <p>type: UNIX Timestamp</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The end date for the date range you are retrieving data for.</p>
+                                                               </td>
+                                                           </tr>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">granularity</span><br/>
+                                                                   <p>type: String</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The granularity by which you would like to retrieve the data.</p>
+                                                                   <ul>
+                                                                       <li class="text-success">HALF_HOUR</li>
+                                                                       <li class="text-success">DAY</li>
+                                                                       <li class="text-success">MONTH</li>
+                                                                   </ul>
+                                                                   
+                                                                   <p>If you select MONTH than start date and end date timestamp difference will be 2-3 months</p>
+                                                               </td>
+                                                           </tr>
+                                                       </tbody>
+                                                   </table>
+                                                    <p class="text-muted mt-3 mb-3">Sample request:</p>
+                                                    <div class="bg-dark m-3 p-3">
+                                                        <pre>
+<span class="pln">curl </span><span class="pun">-</span><span class="pln">i </span><span class="pun">-</span><span class="pln">X  GET \</span>
+ <span class="text-success">'<?php echo base_url() ?>api/wa_message_details'</span>
+ <span class="str text-success">'?start=<?php echo $start ?>'</span>
+ <span class="str text-success">'&end=<?php echo $end ?>'</span>
+ <span class="str text-success">'&granularity=DAY'</span>
+ <span class="str text-success">'&access_token=ACCESS_TOKEN'</span></pre>
+                                                    </div>
+                                                    <p class="text-muted mt-3 mb-3">A successful response</p>
+                                                    <div class="bg-dark m-3 p-3">
+                                                        <pre>
+<pre class="text-success"><span class="pun">{</span><span class="pln">
+  </span><span class="str">"analytics"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+    </span><span class="str">"phone_numbers"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">[</span><span class="pln">
+      </span><span class="str">"16505550111"</span><span class="pun">,</span><span class="pln">
+      </span><span class="str">"16505550112"</span><span class="pun">,</span><span class="pln">
+      </span><span class="str">"16505550113"</span><span class="pln">
+    </span><span class="pun">],</span><span class="pln">
+    </span><span class="str">"country_codes"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">[</span><span class="pln">
+      </span><span class="str">"US"</span><span class="pun">,</span><span class="pln">
+      </span><span class="str">"BR"</span><span class="pln">
+    </span><span class="pun">],</span><span class="pln">
+    </span><span class="str">"granularity"</span><span class="pun">:</span><span class="pln"> </span><span class="str">"DAY"</span><span class="pun">,</span><span class="pln">
+    </span><span class="str">"data_points"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">[</span><span class="pln">
+      </span><span class="pun">{</span><span class="pln">
+        </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543543200</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543629600</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"sent"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">196093</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"delivered"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">179715</span><span class="pln">
+      </span><span class="pun">},</span><span class="pln">
+      </span><span class="pun">{</span><span class="pln">
+        </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543629600</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543716000</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"sent"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">147649</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"delivered"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">139032</span><span class="pln">
+      </span><span class="pun">},</span><span class="pln">
+      </span><span class="pun">{</span><span class="pln">
+        </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543716000</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543802400</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"sent"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">61988</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"delivered"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">58830</span><span class="pln">
+      </span><span class="pun">},</span><span class="pln">
+      </span><span class="pun">{</span><span class="pln">
+        </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543802400</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1543888800</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"sent"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">132465</span><span class="pun">,</span><span class="pln">
+        </span><span class="str">"delivered"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">124392</span><span class="pln">
+      </span><span class="pun">}</span><span class="pln">
+      </span><span class="com"># more data points</span><span class="pln">
+    </span><span class="pun">]</span><span class="pln">
+  </span><span class="pun">},</span><span class="pln">
+  </span><span class="str">"id"</span><span class="pun">:</span><span class="pln"> </span><span class="str">"102290129340398"</span><span class="pln">
+</span><span class="pun">}</span></pre></pre>
+                                                    </div>
+                                            </div>
+                                            
+                                            
+                                            <div class="mt-5">
+                                                   <h2 id="cost-details">WhatsApp Message Details With Cost</h2>
+                                                   <p>It provides cost and conversation information for a specific WABA.</p>
+                                                   <table class="table table-bordered">
+                                                       <thead>
+                                                       <tr>
+                                                           <th>Parameters</th>
+                                                            <th>Description</th>
+                                                       </tr>
+                                                       </thead>
+                                                       <tbody>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">start</span><br/>
+                                                                   <p>type: UNIX Timestamp</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The start date for the date range you are retrieving data for.</p>
+                                                               </td>
+                                                           </tr>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">end</span><br/>
+                                                                   <p>type: UNIX Timestamp</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The end date for the date range you are retrieving data for.</p>
+                                                               </td>
+                                                           </tr>
+                                                           <tr>
+                                                               <td>
+                                                                   <span class="text-success">granularity</span><br/>
+                                                                   <p>type: String</p>
+                                                               </td>
+                                                               <td>
+                                                                   <b>Required</b><br/>
+                                                                   <p>The granularity by which you would like to retrieve the data.</p>
+                                                                   <ul>
+                                                                       <li class="text-success">HALF_HOUR</li>
+                                                                       <li class="text-success">DAILY</li>
+                                                                       <li class="text-success">MONTHLY</li>
+                                                                   </ul>
+                                                                   <p>If you select MONTHLY than start date and end date timestamp difference will be 2-3 months</p>
+                                                               </td>
+                                                           </tr>
+                                                       </tbody>
+                                                   </table>
+                                                    <p class="text-muted mt-3 mb-3">Sample request:</p>
+                                                    <div class="bg-dark m-3 p-3">
+                                                        <pre>
+<span class="pln">curl </span><span class="pun">-</span><span class="pln">i </span><span class="pun">-</span><span class="pln">X  GET \</span>
+ <span class="text-success">'<?php echo base_url() ?>api/wa_cost_details'</span>
+ <span class="str text-success">'?start=<?php echo $start; ?>'</span>
+ <span class="str text-success">'&end=<?php echo $end; ?>'</span>
+ <span class="str text-success">'&granularity=MONTHLY'</span>
+ <span class="str text-success">'&access_token=ACCESS_TOKEN'</span></pre>
+                                                    </div>
+                                                    <p class="text-muted mt-3 mb-3">A successful response</p>
+                                                    <div class="bg-dark m-3 p-3">
+                                                         <pre class="text-success" style=""><span class="pun">{</span><span class="pln">
+  </span><span class="str">"data"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">[</span><span class="pln">
+    </span><span class="pun">{</span><span class="pln">
+      </span><span class="str">"data_points"</span><span class="pun">:</span><span class="pln"> </span><span class="pun">[</span><span class="pln">
+        </span><span class="pun">{</span><span class="pln">
+          </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1643702400</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1646121600</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"conversation"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">8500</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"conversation_type"</span><span class="pun">:</span><span class="pln"> </span><span class="str">"REGULAR"</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"cost"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">88.1010</span><span class="pln">
+        </span><span class="pun">},</span><span class="pln">
+        </span><span class="pun">{</span><span class="pln">
+          </span><span class="str">"start"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1643702400</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"end"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1646121600</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"conversation”: 1000,
+          "</span><span class="pln">conversation_type</span><span class="str">": "</span><span class="pln">FREE_TIER</span><span class="str">",
+          "</span><span class="pln">cost</span><span class="str">": 0.0000
+        }
+        {
+          "</span><span class="pln">start</span><span class="str">": 1643702400,
+          "</span><span class="kwd">end</span><span class="str">": 1646121600,
+          "</span><span class="pln">conversation</span><span class="pun">”:</span><span class="pln"> </span><span class="lit">250</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"conversation_type"</span><span class="pun">:</span><span class="pln"> </span><span class="str">"FREE_ENTRY_POINT"</span><span class="pun">,</span><span class="pln">
+          </span><span class="str">"cost"</span><span class="pun">:</span><span class="pln"> </span><span class="lit">0.0000</span><span class="pln">
+        </span><span class="pun">}</span><span class="pln">
+      </span><span class="pun">]</span><span class="pln">
+    </span><span class="pun">}</span><span class="pln">
+  </span><span class="pun">]</span><span class="pln">
+</span><span class="pun">}</span></pre>   
+                                                    </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

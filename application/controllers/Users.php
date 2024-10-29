@@ -84,8 +84,7 @@ class Users extends CI_Controller {
             return TRUE;
         }
     }
-    
-    
+
     function check_deleted_user($email) {
         $where = 'email = ' . $this->db->escape($email) . ' AND is_deleted = 1 AND type="user"';
         $check_user = $this->CMS_model->get_result(tbl_users, $where, null, 1);
@@ -94,6 +93,20 @@ class Users extends CI_Controller {
         } else {
             return false;
         }
+    }
+
+    public function validate_license_dates() {
+        $license_start = $this->input->post('license_start');
+        $license_end = $this->input->post('license_end');
+
+        $start_timestamp = strtotime($license_start);
+        $end_timestamp = strtotime($license_end);
+
+        if ($end_timestamp <= $start_timestamp) {
+            $this->form_validation->set_message('validate_license_dates', 'The License End date must be greater than the License Start date.');
+            return false;
+        }
+        return true;
     }
 
     public function save() {
@@ -119,6 +132,8 @@ class Users extends CI_Controller {
             $this->form_validation->set_rules('name', 'Name', 'trim|required');
             $this->form_validation->set_rules('email', 'Email', 'trim|required' . $unique_str);
             $this->form_validation->set_rules('phone_number', 'Phone', 'trim|required');
+            $this->form_validation->set_rules('license_start', 'License Start', 'trim|required');
+            $this->form_validation->set_rules('license_end', 'License End', 'trim|required|callback_validate_license_dates');
             if (is_numeric($user_id)) {
                 
             } else {
@@ -134,7 +149,9 @@ class Users extends CI_Controller {
                 }
                 redirect($url);
             } else {
-                
+                $license_start = $this->input->post('license_start');
+                $license_end = $this->input->post('license_end');
+        
                 $update_array = [
                     'name' => $this->input->post('name'),
                     'email' => $this->input->post('email'),
@@ -143,12 +160,16 @@ class Users extends CI_Controller {
                     'type' => ($this->input->post('type') != '') ? $this->input->post('type') : 'user',
                     'waba_access' => $this->input->post('waba_access') == 'on' ? 1 : 0,
                     'crm_lead_access' => $this->input->post('crm_lead_access') == 'on' ? '1' : '0',
+                    'license_start' => date('Y-m-d', strtotime($license_start)),
+                    'license_end' => date('Y-m-d', strtotime($license_end)),
+                    'status' => $this->input->post('status') == 'active' ? 'active' : 'inactive',
                 ];
                 $password = $this->input->post('password');
                 
-                if(empty($user_id)){
+
+                if (empty($user_id)) {
                     $user_id = $this->check_deleted_user($this->input->post('email'));
-                    if(!empty($user_id)){
+                    if (!empty($user_id)) {
                         $update_array['password'] = $this->encrypt->encode($password);
                         $update_array['is_deleted'] = 0;
                     }
@@ -158,7 +179,7 @@ class Users extends CI_Controller {
                     $this->CMS_model->update_record(tbl_users, $where, $update_array);
                     $this->session->set_flashdata('success_msg', 'User updated successfully !');
                 } else {
-                    
+
                     $update_array['password'] = $this->encrypt->encode($password);
                     $update_array['created_at'] = date('Y-m-d H:i:s');
                     $this->CMS_model->insert_data(tbl_users, $update_array);
@@ -205,6 +226,25 @@ class Users extends CI_Controller {
         redirect('users');
     }
 
+    
+    public function change_user_tatus(){
+        $id = $this->input->post('id');
+        $status = $this->input->post('status');
+        $is_exist = $this->db->get_where(tbl_users, array('id' => $id))->row_array();
+        if(!empty($is_exist)){
+            if($status == 'active'){
+                $update_user['status'] = 'inactive';
+            }else{
+                $update_user['status'] = 'active';
+            }
+            $this->CMS_model->update_record(tbl_users, 'id =' . $id, $update_user);
+            $return = array('status'=> true);
+        }else{
+            $return = array('status'=> false);
+        }
+        echo json_encode($return);
+    }
+    
     /**
      * @uses : This Function load view of Category list.
      * @author : HPA
@@ -230,7 +270,7 @@ class Users extends CI_Controller {
             $this->data['user_settings'] = $this->CMS_model->get_result(tbl_user_settings, $where, null, 1, null, 'id', 'desc');
             $this->data['templates'] = get_user_meta_templates($user_id);
             $this->data['time_zone'] = get_time_zone();
-            
+
             $tgwhere = 'user_id = ' . $this->db->escape($user_id);
             $this->data['user_tags'] = $this->CMS_model->get_result(tbl_tags, $tgwhere, 'id as value,tag as name, user_id', null, null, 'id', 'DESC');
             if ($this->session->userdata('type') == 'user' && $this->data['user_settings']) {
@@ -359,10 +399,10 @@ class Users extends CI_Controller {
                         }
                     }
                 }
-                
-                
-                
-                
+
+
+
+
                 $time_zone = $this->input->post('time_zone');
 
                 $where = array('id' => $setting_id);

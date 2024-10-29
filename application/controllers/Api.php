@@ -295,6 +295,90 @@ class Api extends CI_Controller {
         }
     }
 
+    public function wa_message_details() {
+        $auth = $this->input->get('access_token');
+        if (!empty($auth)) {
+            $authentication = $this->authenticate(trim($auth));
+            if (!empty($authentication)) {
+                $start_date = $this->input->get('start');
+                $end_date = $this->input->get('end');
+                $granularity = $this->input->get('granularity');
+                if(!empty($start_date) && !empty($end_date) && !empty($granularity)){
+                    $authentication['start_date'] = $start_date;
+                    $authentication['end_date'] = $end_date;
+                    $authentication['granularity'] = $granularity;
+                    
+                    $response = getMessageDetails($authentication);
+                    
+                    echo json_encode($response);
+                    exit();
+                }else{
+                   $return['error'] = array(
+                        "message" => "Something went wrong.",
+                        "code" => 401,
+                    );
+                    echo json_encode($return);
+                    exit(); 
+                }
+            } else {
+                $return['error'] = array(
+                    "message" => "Invalid OAuth access token - Cannot parse access token.",
+                    "code" => 401,
+                );
+                echo json_encode($return);
+                exit();
+            }
+        } else {
+            $return['error'] = array(
+                "message" => "Please provide API token.",
+                "code" => 401,
+            );
+            echo json_encode($return);
+        }
+    }
+    
+    public function wa_cost_details() {
+        $auth = $this->input->get('access_token');
+        if (!empty($auth)) {
+            $authentication = $this->authenticate(trim($auth));
+            if (!empty($authentication)) {
+                $start_date = $this->input->get('start');
+                $end_date = $this->input->get('end');
+                $granularity = $this->input->get('granularity');
+                if(!empty($start_date) && !empty($end_date) && !empty($granularity)){
+                    $authentication['start_date'] = $start_date;
+                    $authentication['end_date'] = $end_date;
+                    $authentication['granularity'] = $granularity;
+                    $response = getConversionCost($authentication);
+                    
+                    echo json_encode($response);
+                    exit();
+                }else{
+                   $return['error'] = array(
+                        "message" => "Something went wrong.",
+                        "code" => 401,
+                    );
+                    echo json_encode($return);
+                    exit(); 
+                }
+            } else {
+                $return['error'] = array(
+                    "message" => "Invalid OAuth access token - Cannot parse access token.",
+                    "code" => 401,
+                );
+                echo json_encode($return);
+                exit();
+            }
+        } else {
+            $return['error'] = array(
+                "message" => "Please provide API token.",
+                "code" => 401,
+            );
+            echo json_encode($return);
+        }
+    }
+    
+    
     public function docs() {
         $this->load->view('docs');
     }

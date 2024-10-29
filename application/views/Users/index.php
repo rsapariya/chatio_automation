@@ -41,6 +41,7 @@
                                     <th>Email</th>
                                     <th>Mobile No.</th>
                                     <th>Type</th>
+                                    <th>Status</th>
                                     <th>Created</th>
                                     <th class="text-center">Action</th>
                                 </tr>

@@ -358,7 +358,7 @@
                     <?php
                     }
 
-                    if ((isset($user_data) && $user_data['type'] == 'user' && !empty($user_data['waba_access'])) || isset($user_data) && $user_data['type'] == 'admin') {
+                    if ((isset($user_data) && $user_data['type'] == 'user' && !empty($user_data['waba_access']))) {
                     ?>
                     <li class="menu <?php echo ($controller == 'templates') ? 'active' : ''; ?>">
                         <a href="<?php echo base_url(); ?>templates" class="dropdown-toggle">
